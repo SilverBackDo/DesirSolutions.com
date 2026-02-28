@@ -1,0 +1,30 @@
+# Backend .dockerignore — FastAPI image
+
+# Environment and secrets
+.env
+.env.*
+*.env
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# Git
+.git
+.gitignore
+
+# Tests
+tests/
+test_*.py
+
+# Documentation
+*.md
+
+# OS and IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,43 @@
+# ─── Environment ───
+.env
+*.env.local
+.env.production
+
+# ─── Certificates ───
+certbot/conf/
+certbot/www/
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# ─── Node ───
+node_modules/
+npm-debug.log*
+
+# ─── Docker ───
+*.log
+
+# ─── IDE ───
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ─── OS ───
+.DS_Store
+Thumbs.db
+
+# ─── Backups ───
+*.sql
+*.sql.gz
+
+# ─── Temp / Claude ───
+tmpclaude-*
+*.ini

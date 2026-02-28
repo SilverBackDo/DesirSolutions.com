@@ -1,0 +1,7 @@
+# Desir Solutions - www.desirsolutions.com
+# Allow all well-behaved crawlers; block nothing.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://www.desirsolutions.com/sitemap.xml

@@ -1,0 +1,109 @@
+/* ─── Reset & Base ─── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f5f6fa;
+  color: #2d3436;
+}
+
+/* ─── Navbar ─── */
+.navbar {
+  background: #1a1a2e;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.nav-links a {
+  color: #a4b0be;
+  text-decoration: none;
+  margin-left: 1.5rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover {
+  color: white;
+}
+
+/* ─── Pages ─── */
+.page {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.page h2 {
+  margin-bottom: 1.5rem;
+  font-size: 1.6rem;
+}
+
+/* ─── Cards ─── */
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1rem;
+}
+
+.card h3 {
+  margin-bottom: 0.5rem;
+  color: #636e72;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-ok {
+  color: #00b894;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.status-err {
+  color: #d63031;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+/* ─── Clients Table ─── */
+.clients-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.clients-table th {
+  background: #1a1a2e;
+  color: white;
+  padding: 0.8rem 1rem;
+  text-align: left;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.clients-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #f1f2f6;
+}
+
+.clients-table tr:hover td {
+  background: #f8f9ff;
+}

@@ -1,0 +1,50 @@
+version: "3.9"
+
+networks:
+  crm_network:
+    driver: bridge
+
+volumes:
+  pgdata:
+
+services:
+  db:
+    image: postgres:16
+    container_name: crm_db
+    restart: always
+    environment:
+      POSTGRES_DB: crm
+      POSTGRES_USER: crmuser
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - crm_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crmuser -d crm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: crm_backend
+    restart: always
+    env_file:
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - crm_network
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: crm_frontend
+    restart: always
+    networks:
+      - crm_network
+    ports:
+      - "3000:80"
