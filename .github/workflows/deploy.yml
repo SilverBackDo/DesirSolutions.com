@@ -1,0 +1,27 @@
+name: Deploy self-hosted website
+
+on:
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Build frontend image
+              run: docker build -t desir-frontend:latest ./Desirtech
+
+            - name: Deploy to Oracle VM via SSH
+              uses: appleboy/ssh-action@v1.2.0
+              with:
+                  host: ${{ secrets.OCI_VM_HOST }}
+                  username: ${{ secrets.OCI_VM_USER }}
+                  key: ${{ secrets.OCI_VM_SSH_KEY }}
+                  script: |
+                      cd /opt/desir/Desirtech
+                      git pull
+                      docker compose down
+                      docker compose up -d --build
+                      docker image prune -f

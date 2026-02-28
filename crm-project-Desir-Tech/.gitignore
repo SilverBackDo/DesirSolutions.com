@@ -1,0 +1,35 @@
+# ─── Environment ───
+.env
+*.env.local
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# ─── Node ───
+node_modules/
+frontend/build/
+npm-debug.log*
+
+# ─── Docker ───
+*.log
+
+# ─── IDE ───
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ─── OS ───
+.DS_Store
+Thumbs.db
+
+# ─── Backups ───
+*.sql
+*.sql.gz

@@ -1,0 +1,38 @@
+# Root .dockerignore — nginx frontend image
+# Only HTML, CSS, JS, images, and nginx config should enter the image.
+
+# Environment and secrets
+.env
+.env.*
+*.env
+
+# Git
+.git
+.gitignore
+
+# Backend project (has its own Dockerfile)
+crm-project-Desir-Tech/
+
+# Infrastructure and scripts
+scripts/
+certbot/
+nginx/
+
+# Documentation
+*.md
+DEPLOYMENT-GUIDE.md
+LICENSE
+
+# Database dumps
+*.sql
+*.sql.gz
+
+# OS and IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build artifacts
+node_modules/
+npm-debug.log*
