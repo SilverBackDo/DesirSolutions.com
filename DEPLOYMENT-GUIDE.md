@@ -1,6 +1,7 @@
-# Desir Solutions — Oracle Cloud Deployment Guide
+# Desir Solutions Oracle Cloud Deployment Guide
 
 **Project:** Desirtech Website + CRM Backend
+**Source of Truth:** `Desirtech` root (infrastructure + deployment)
 **Target:** Oracle Cloud Infrastructure (OCI) Always Free Tier
 **OS:** Oracle Linux 8 or 9 (ARM / Ampere A1)
 **Stack:** nginx + FastAPI + PostgreSQL 16 + Docker Compose + Let's Encrypt SSL
@@ -22,15 +23,15 @@
 2. Navigate to **Compute → Instances → Create Instance**
 3. Configure:
 
-| Setting | Value |
-|---------|-------|
-| Name | desir-web |
-| Image | Oracle Linux 8 (or 9) |
-| Shape | VM.Standard.A1.Flex (ARM) |
-| OCPUs | 4 (Always Free allows up to 4) |
-| Memory | 24 GB (Always Free allows up to 24) |
-| Boot Volume | 200 GB (Always Free max) |
-| SSH Key | Upload or paste your public key |
+| Setting     | Value                               |
+| ----------- | ----------------------------------- |
+| Name        | desir-web                           |
+| Image       | Oracle Linux 8 (or 9)               |
+| Shape       | VM.Standard.A1.Flex (ARM)           |
+| OCPUs       | 4 (Always Free allows up to 4)      |
+| Memory      | 24 GB (Always Free allows up to 24) |
+| Boot Volume | 200 GB (Always Free max)            |
+| SSH Key     | Upload or paste your public key     |
 
 4. Click **Create** and wait for the instance to reach RUNNING state
 5. Copy the **Public IP Address** from the instance details page
@@ -48,9 +49,9 @@ OCI blocks all ingress traffic by default. You must open ports at two levels.
 3. Add two **Ingress Rules**:
 
 | Source CIDR | Protocol | Dest Port | Description |
-|-------------|----------|-----------|-------------|
-| 0.0.0.0/0 | TCP | 80 | HTTP |
-| 0.0.0.0/0 | TCP | 443 | HTTPS |
+| ----------- | -------- | --------- | ----------- |
+| 0.0.0.0/0   | TCP      | 80        | HTTP        |
+| 0.0.0.0/0   | TCP      | 443       | HTTPS       |
 
 4. SSH (port 22) should already be open by default
 
@@ -81,28 +82,29 @@ EMAIL=contact@desirsolutions.com \
 bash bootstrap-oci-vm.sh
 ```
 
-### What the script does (10 steps):
+### What the script does (11 steps):
 
-| Step | Action |
-|------|--------|
-| 1/10 | Verifies Oracle Linux |
-| 2/10 | System update, installs base packages (git, curl, openssl) |
-| 3/10 | Installs Docker CE from the CentOS/RHEL repository |
-| 4/10 | Opens ports 80 and 443 in OCI's default iptables rules |
-| 5/10 | Configures firewalld for SSH, HTTP, HTTPS |
-| 6/10 | Clones the repo to /opt/desir/Desirtech |
-| 7/10 | Generates .env with random DB password and secret key (chmod 600) |
-| 8/10 | Creates certbot directories for SSL certificates |
-| 9/10 | Builds and starts all Docker containers |
-| 10/10 | Prints next steps for DNS and SSL |
+| Step  | Action                                                            |
+| ----- | ----------------------------------------------------------------- |
+| 1/11  | Verifies Oracle Linux                                             |
+| 2/11  | System update, installs base packages (git, curl, openssl)       |
+| 3/11  | Installs Docker CE from the CentOS/RHEL repository               |
+| 4/11  | Opens ports 80 and 443 in OCI's default iptables rules           |
+| 5/11  | Configures firewalld for SSH, HTTP, HTTPS                        |
+| 6/11  | Clones the repo to /opt/desir/Desirtech                          |
+| 7/11  | Generates .env with random DB password and secret key (chmod 600)|
+| 8/11  | Creates certbot directories for SSL certificates                 |
+| 9/11  | Ensures temporary TLS files exist for first boot                 |
+| 10/11 | Builds and starts all Docker containers                          |
+| 11/11 | Prints DNS and SSL next steps                                    |
 
 ### Environment variables:
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| REPO_URL | Yes | — | Git repository URL |
-| DOMAIN | No | desirsolutions.com | Primary domain |
-| EMAIL | No | contact@desirsolutions.com | SSL certificate notifications |
+| Variable | Required | Default                    | Description                   |
+| -------- | -------- | -------------------------- | ----------------------------- |
+| REPO_URL | Yes      | —                         | Git repository URL            |
+| DOMAIN   | No       | desirsolutions.com         | Primary domain                |
+| EMAIL    | No       | contact@desirsolutions.com | SSL certificate notifications |
 
 ---
 
@@ -110,10 +112,10 @@ bash bootstrap-oci-vm.sh
 
 At your domain registrar, create A records pointing to the VM's public IP:
 
-| Record Type | Host | Value |
-|-------------|------|-------|
-| A | @ | \<VM Public IP\> |
-| A | www | \<VM Public IP\> |
+| Record Type | Host | Value            |
+| ----------- | ---- | ---------------- |
+| A           | @    | \<VM Public IP\> |
+| A           | www  | \<VM Public IP\> |
 
 DNS propagation typically takes 5–30 minutes. Verify with:
 
@@ -180,35 +182,37 @@ SSL certificates auto-renew via the certbot container (checks every 12 hours).
 
 ### Docker Services
 
-| Service | Image | Ports | Purpose |
-|---------|-------|-------|---------|
-| frontend | nginx:alpine (custom) | 80, 443 | Static site + reverse proxy + SSL |
-| backend | python:3.11-slim (custom) | 8000 (internal) | FastAPI CRM API |
-| db | postgres:16-alpine | 5432 (internal) | PostgreSQL database |
-| certbot | certbot/certbot | — | SSL certificate renewal |
+| Service  | Image                     | Ports           | Purpose                           |
+| -------- | ------------------------- | --------------- | --------------------------------- |
+| frontend | nginx:alpine (custom)     | 80, 443         | Static site + reverse proxy + SSL |
+| backend  | python:3.11-slim (custom) | 8000 (internal) | FastAPI CRM API                   |
+| db       | postgres:16-alpine        | 5432 (internal) | PostgreSQL database               |
+| certbot  | certbot/certbot           | —              | SSL certificate renewal           |
 
 ---
 
 ## File Locations on the VM
 
-| Path | Contents |
-|------|----------|
-| /opt/desir/Desirtech/ | Project root |
-| /opt/desir/Desirtech/.env | Credentials (auto-generated, chmod 600) |
-| /opt/desir/Desirtech/certbot/conf/ | SSL certificates |
-| /opt/desir/Desirtech/certbot/www/ | ACME challenge files |
+| Path                               | Contents                                |
+| ---------------------------------- | --------------------------------------- |
+| /opt/desir/Desirtech/              | Project root                            |
+| /opt/desir/Desirtech/.env          | Credentials (auto-generated, chmod 600) |
+| /opt/desir/Desirtech/certbot/conf/ | SSL certificates                        |
+| /opt/desir/Desirtech/certbot/www/  | ACME challenge files                    |
 
 ---
 
 ## Common Operations
 
 ### View running containers
+
 ```bash
 cd /opt/desir/Desirtech
 docker compose ps
 ```
 
 ### View logs
+
 ```bash
 docker compose logs frontend    # nginx
 docker compose logs backend     # FastAPI
@@ -217,6 +221,7 @@ docker compose logs -f          # all services, follow
 ```
 
 ### Restart after code changes
+
 ```bash
 cd /opt/desir/Desirtech
 git pull
@@ -225,17 +230,20 @@ docker compose up -d --build
 ```
 
 ### Check database
+
 ```bash
 docker compose exec db psql -U desiruser -d desir
 ```
 
 ### Manual SSL renewal
+
 ```bash
 docker compose run --rm certbot renew
 docker compose restart frontend
 ```
 
 ### Check disk usage
+
 ```bash
 df -h
 docker system df
@@ -245,15 +253,15 @@ docker system df
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---------|-------|-----|
-| Site unreachable from browser | OCI Security List missing ingress rules | Add TCP 80/443 ingress rules in VCN Security List |
-| Site unreachable despite Security List | OS iptables blocking | Re-run: `sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT` (same for 443) |
-| SSL cert fails to issue | DNS not pointing to VM | Verify with `dig desirsolutions.com` — must return VM's public IP |
-| SSL cert fails (rate limit) | Too many requests to Let's Encrypt | Wait 1 hour, retry. Add `--staging` flag to test first |
-| Backend API returns 502 | Backend container not running | Check `docker compose logs backend` |
-| Database connection refused | DB not healthy yet | Check `docker compose ps` — db should show "healthy" |
-| Cannot SSH | Security List or iptables | Verify port 22 is open in Security List |
+| Problem                                | Cause                                   | Fix                                                                                                 |
+| -------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Site unreachable from browser          | OCI Security List missing ingress rules | Add TCP 80/443 ingress rules in VCN Security List                                                   |
+| Site unreachable despite Security List | OS iptables blocking                    | Re-run:`sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT` (same for 443) |
+| SSL cert fails to issue                | DNS not pointing to VM                  | Verify with `dig desirsolutions.com` — must return VM's public IP                                |
+| SSL cert fails (rate limit)            | Too many requests to Let's Encrypt      | Wait 1 hour, retry. Add `--staging` flag to test first                                            |
+| Backend API returns 502                | Backend container not running           | Check `docker compose logs backend`                                                               |
+| Database connection refused            | DB not healthy yet                      | Check `docker compose ps` — db should show "healthy"                                             |
+| Cannot SSH                             | Security List or iptables               | Verify port 22 is open in Security List                                                             |
 
 ---
 
@@ -265,7 +273,7 @@ Copy the backup script to the VM and configure cron:
 
 ```bash
 mkdir -p ~/scripts ~/backups
-cp /opt/desir/Desirtech/crm-project-Desir-Tech/scripts/backup-db.sh ~/scripts/
+cp /opt/desir/Desirtech/scripts/backup-db.sh ~/scripts/
 chmod +x ~/scripts/backup-db.sh
 ```
 
@@ -308,13 +316,13 @@ docker exec -i desir-db psql -U desiruser -d desir < ~/backups/desir_backup_2026
 
 All containers are memory and CPU limited to prevent any single service from exhausting the VM:
 
-| Service | Memory Limit | CPU Limit |
-|---------|-------------|-----------|
-| frontend (nginx) | 512 MB | 0.50 |
-| backend (FastAPI) | 2 GB | 1.50 |
-| db (PostgreSQL) | 4 GB | 1.50 |
-| certbot | 128 MB | 0.25 |
-| OS + Docker | ~17 GB headroom | 0.25 |
+| Service           | Memory Limit    | CPU Limit |
+| ----------------- | --------------- | --------- |
+| frontend (nginx)  | 512 MB          | 0.50      |
+| backend (FastAPI) | 2 GB            | 1.50      |
+| db (PostgreSQL)   | 4 GB            | 1.50      |
+| certbot           | 128 MB          | 0.25      |
+| OS + Docker       | ~17 GB headroom | 0.25      |
 
 ### Monitor resource usage
 
@@ -334,12 +342,12 @@ docker inspect desir-backend --format='{{.State.OOMKilled}}'
 
 All containers use the `json-file` log driver with rotation to prevent disk fill:
 
-| Service | Max Log Size | Max Files | Total Cap |
-|---------|-------------|-----------|-----------|
-| frontend | 10 MB | 3 | 30 MB |
-| backend | 25 MB | 5 | 125 MB |
-| db | 25 MB | 5 | 125 MB |
-| certbot | 5 MB | 2 | 10 MB |
+| Service  | Max Log Size | Max Files | Total Cap |
+| -------- | ------------ | --------- | --------- |
+| frontend | 10 MB        | 3         | 30 MB     |
+| backend  | 25 MB        | 5         | 125 MB    |
+| db       | 25 MB        | 5         | 125 MB    |
+| certbot  | 5 MB         | 2         | 10 MB     |
 
 ### View recent logs
 
@@ -371,11 +379,11 @@ docker builder prune -f         # remove build cache
 
 All services have health checks configured. Docker will automatically restart unhealthy containers.
 
-| Service | Health Endpoint | Interval | Timeout |
-|---------|----------------|----------|---------|
-| frontend | wget localhost:80 | 30s | 5s |
-| backend | python urllib localhost:8000/health | 30s | 10s |
-| db | pg_isready | 10s | 5s |
+| Service  | Health Endpoint                     | Interval | Timeout |
+| -------- | ----------------------------------- | -------- | ------- |
+| frontend | wget https://127.0.0.1/             | 30s      | 5s      |
+| backend  | python urllib localhost:8000/health | 30s      | 10s     |
+| db       | pg_isready                          | 10s      | 5s      |
 
 ### Check health status
 
@@ -386,8 +394,13 @@ docker compose ps    # STATUS column shows health
 ### API health endpoints
 
 ```bash
-curl https://desirsolutions.com/api/health      # basic liveness
-curl https://desirsolutions.com/api/health/db    # database connectivity
+# Through nginx reverse proxy
+curl https://desirsolutions.com/api/health
+curl https://desirsolutions.com/api/health/db
+
+# Direct backend container port (local/dev)
+curl http://localhost:8000/health
+curl http://localhost:8000/health/db
 ```
 
 ---
@@ -418,15 +431,15 @@ curl https://desirsolutions.com/api/health/db    # database connectivity
 
 ### Security Headers
 
-| Header | Value |
-|--------|-------|
-| Strict-Transport-Security | max-age=31536000; includeSubDomains |
-| Content-Security-Policy | default-src 'self'; restricted directives |
-| X-Frame-Options | SAMEORIGIN |
-| X-Content-Type-Options | nosniff |
-| X-XSS-Protection | 1; mode=block |
-| Referrer-Policy | strict-origin-when-cross-origin |
-| Permissions-Policy | camera=(), microphone=(), geolocation=(), payment=() |
+| Header                    | Value                                                |
+| ------------------------- | ---------------------------------------------------- |
+| Strict-Transport-Security | max-age=31536000; includeSubDomains                  |
+| Content-Security-Policy   | default-src 'self'; restricted directives            |
+| X-Frame-Options           | SAMEORIGIN                                           |
+| X-Content-Type-Options    | nosniff                                              |
+| X-XSS-Protection          | 1; mode=block                                        |
+| Referrer-Policy           | strict-origin-when-cross-origin                      |
+| Permissions-Policy        | camera=(), microphone=(), geolocation=(), payment=() |
 
 ### Application
 
@@ -451,13 +464,13 @@ curl https://desirsolutions.com/api/health/db    # database connectivity
 
 ## OCI Always Free Tier Limits
 
-| Resource | Limit | This Deployment |
-|----------|-------|-----------------|
-| ARM OCPUs | 4 total | 4 (full allocation) |
-| ARM Memory | 24 GB total | 24 GB (full allocation) |
-| Boot Volume | 200 GB | 200 GB |
-| Outbound Data | 10 TB/month | Well within limit |
-| Public IPs | 2 | 1 used |
+| Resource      | Limit       | This Deployment         |
+| ------------- | ----------- | ----------------------- |
+| ARM OCPUs     | 4 total     | 4 (full allocation)     |
+| ARM Memory    | 24 GB total | 24 GB (full allocation) |
+| Boot Volume   | 200 GB      | 200 GB                  |
+| Outbound Data | 10 TB/month | Well within limit       |
+| Public IPs    | 2           | 1 used                  |
 
 No charges will be incurred as long as you stay within Always Free limits and select Always Free eligible shapes.
 
