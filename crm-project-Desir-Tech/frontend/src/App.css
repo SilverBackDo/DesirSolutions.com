@@ -34,6 +34,12 @@ body {
   transition: color 0.2s;
 }
 
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .nav-links a:hover {
   color: white;
 }
@@ -67,6 +73,17 @@ body {
   letter-spacing: 0.5px;
 }
 
+.kpi-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.kpi-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
 .status-ok {
   color: #00b894;
   font-weight: 700;
@@ -80,7 +97,7 @@ body {
 }
 
 /* ─── Clients Table ─── */
-.clients-table {
+.data-table {
   width: 100%;
   border-collapse: collapse;
   background: white;
@@ -89,7 +106,7 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.clients-table th {
+.data-table th {
   background: #1a1a2e;
   color: white;
   padding: 0.8rem 1rem;
@@ -99,11 +116,87 @@ body {
   letter-spacing: 0.5px;
 }
 
-.clients-table td {
+.data-table td {
   padding: 0.8rem 1rem;
   border-bottom: 1px solid #f1f2f6;
 }
 
-.clients-table tr:hover td {
+.data-table tr:hover td {
   background: #f8f9ff;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.form-grid h3 {
+  grid-column: 1 / -1;
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea,
+.form-grid button {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #dfe6e9;
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+}
+
+.form-grid textarea {
+  min-height: 80px;
+  grid-column: 1 / -1;
+}
+
+.form-grid button {
+  background: #1a1a2e;
+  color: #fff;
+  border: 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.badge {
+  display: inline-block;
+  border-radius: 99px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.badge-new,
+.badge-qualified,
+.badge-discovery,
+.badge-proposal,
+.badge-negotiation {
+  background: #fff4d6;
+  color: #8c6d1f;
+}
+
+.badge-won {
+  background: #def8eb;
+  color: #1e7f4f;
+}
+
+.badge-lost,
+.badge-on-hold {
+  background: #ffe3e3;
+  color: #a12828;
+}
+
+@media (max-width: 720px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .page {
+    padding: 1rem;
+  }
 }

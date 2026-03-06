@@ -5,11 +5,12 @@ Client CRUD endpoints.
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from app.auth import require_api_key
 from app.database import get_db
 from app.models import Client
 from app.schemas import ClientCreate, ClientUpdate, ClientResponse
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_key)])
 
 
 @router.get("/", response_model=list[ClientResponse])

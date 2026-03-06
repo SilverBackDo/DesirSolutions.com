@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import Base, engine
-from app.routes import health, clients, contact
+from app.routes import health, clients, contact, leads, opportunities, pipeline, dashboard, invoices, payments
 
 # ─── Logging ───
 logging.basicConfig(
@@ -33,6 +33,8 @@ app = FastAPI(
 )
 
 # ─── Global exception handler ───
+
+
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
     logger.error(
@@ -52,16 +54,32 @@ app.add_middleware(
     allow_origins=settings.allowed_origins_list,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
 
 # ─── Routes ───
 app.include_router(health.router, tags=["Health"])
 app.include_router(clients.router, prefix="/api/clients", tags=["Clients"])
 app.include_router(contact.router, prefix="/api/contact", tags=["Contact"])
+app.include_router(leads.router, prefix="/api/leads", tags=["Leads"])
+app.include_router(opportunities.router,
+                   prefix="/api/opportunities", tags=["Opportunities"])
+app.include_router(pipeline.router, prefix="/api/pipeline", tags=["Pipeline"])
+app.include_router(
+    dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+app.include_router(invoices.router, prefix="/api/invoices", tags=["Invoices"])
+app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 
 # ─── Create tables ───
-from app.models import Client, ContactSubmission  # noqa: E402, F401
+from app.models import (  # noqa: E402, F401
+    Client,
+    ContactSubmission,
+    Lead,
+    Opportunity,
+    OpportunityActivity,
+    Invoice,
+    IncomingPayment,
+)
 Base.metadata.create_all(bind=engine)
 
 logger.info("DesirTech CRM API started (env=%s)", settings.env)

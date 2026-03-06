@@ -16,6 +16,7 @@
   <header class="site-header">
     <div class="container topbar">
       <a class="logo" href="index.html">Desir Solutions</a>
+      <button class="nav-toggle" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
       <nav>
         <ul>
           <li><a href="index.html">Home</a></li>
@@ -30,52 +31,127 @@
           <li><a href="industries.html">Industries</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
-          <li><a href="terms-privacy.html">Terms &amp; Privacy</a></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <h1>Discuss your modernization and engineering requirements.</h1>
+  <section class="hero">
+    <div class="container">
+      <h1>Let's Discuss Your Modernization and Engineering Requirements.</h1>
       <p>Share your current environment and objectives. We provide a response with clear next steps within one business day.</p>
-    </section>
+    </div>
+  </section>
 
+  <main>
+    <!-- ── Contact Form ── -->
     <section class="section">
-      <h2>Contact Form</h2>
-      <form class="card" action="/api/contact" method="post">
-        <div class="form-grid">
-          <div><label for="name">Name</label><input id="name" name="name" required /></div>
-          <div><label for="email">Email</label><input id="email" type="email" name="email" required /></div>
-          <div><label for="company">Company</label><input id="company" name="company" /></div>
-          <div><label for="role">Role</label><input id="role" name="role" /></div>
-          <div><label for="environment">Environment</label>
-            <select id="environment" name="environment">
-              <option>Cloud</option><option>Hybrid</option><option>Self-Hosted</option>
-            </select>
-          </div>
-          <div><label for="timeline">Timeline and urgency</label><input id="timeline" name="timeline" /></div>
+      <div class="container" style="max-width: 780px;">
+        <div class="form-card">
+          <h2>Consultation Request</h2>
+          <form action="/api/contact/" method="post">
+            <!-- Honeypot — hidden from real users -->
+            <div class="hp-field" aria-hidden="true">
+              <label for="website">Website</label>
+              <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+            </div>
+
+            <div class="form-grid">
+              <div><label for="name">Name</label><input id="name" name="name" required /></div>
+              <div><label for="email">Email</label><input id="email" type="email" name="email" required /></div>
+              <div><label for="company">Company</label><input id="company" name="company" /></div>
+              <div><label for="role">Role</label><input id="role" name="role" /></div>
+              <div><label for="environment">Environment</label>
+                <select id="environment" name="environment">
+                  <option value="">Select...</option>
+                  <option>Cloud</option>
+                  <option>Hybrid</option>
+                  <option>Self-Hosted</option>
+                </select>
+              </div>
+              <div><label for="timeline">Timeline &amp; Urgency</label><input id="timeline" name="timeline" /></div>
+            </div>
+            <div style="margin-top: 16px;">
+              <label for="message">How can we help?</label>
+              <textarea id="message" name="message"></textarea>
+            </div>
+            <div style="margin-top: 20px;">
+              <button class="btn primary" type="submit">Submit Consultation Request</button>
+            </div>
+          </form>
         </div>
-        <p><label for="message">How can we help?</label><textarea id="message" name="message"></textarea></p>
-        <p><button class="btn primary" type="submit">Submit consultation request</button></p>
-      </form>
+      </div>
     </section>
 
-    <section class="section">
-      <h2>Direct Contact</h2>
-      <p>Email: <a href="mailto:contact@desirsolutions.com">contact@desirsolutions.com</a></p>
-      <p>Website: <a href="https://www.desirsolutions.com">www.desirsolutions.com</a></p>
-      <p>Location: Maple Valley, WA 98038</p>
+    <!-- ── Direct Contact ── -->
+    <section class="section section--alt">
+      <div class="container" style="max-width: 780px;">
+        <h2>Direct Contact</h2>
+        <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+          <div class="card" style="text-align: center;">
+            <h3>Email</h3>
+            <p><a href="mailto:contact@desirsolutions.com">contact@desirsolutions.com</a></p>
+          </div>
+          <div class="card" style="text-align: center;">
+            <h3>Legal</h3>
+            <p><a href="mailto:legal@desirsolutions.com">legal@desirsolutions.com</a></p>
+          </div>
+          <div class="card" style="text-align: center;">
+            <h3>Privacy</h3>
+            <p><a href="mailto:privacy@desirsolutions.com">privacy@desirsolutions.com</a></p>
+          </div>
+          <div class="card" style="text-align: center;">
+            <h3>Invoicing</h3>
+            <p><a href="mailto:invoices@desirsolutions.com">invoices@desirsolutions.com</a></p>
+          </div>
+          <div class="card" style="text-align: center;">
+            <h3>Website</h3>
+            <p><a href="https://www.desirsolutions.com">www.desirsolutions.com</a></p>
+          </div>
+          <div class="card" style="text-align: center;">
+            <h3>Location</h3>
+            <p>Maple Valley, WA 98038</p>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="container">Desir Solutions LLC | Contact | Email: <a href="mailto:contact@desirsolutions.com">contact@desirsolutions.com</a> | Website: <a href="https://www.desirsolutions.com">www.desirsolutions.com</a><br />All services are subject to a fully executed written agreement. | <a href="terms-privacy.html">Terms &amp; Privacy</a></div>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">Desir Solutions</div>
+          <p><em>Modern Infrastructure. Automated Delivery. Exceptional Talent.</em></p>
+        </div>
+        <div class="footer-links">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="services.html">Consulting &amp; Advisory</a></li>
+            <li><a href="services-outsourcing.html">Project Execution</a></li>
+            <li><a href="talent.html">Talent Solutions</a></li>
+            <li><a href="industries.html">Industries</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="terms-privacy.html">Terms &amp; Privacy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 Desir Solutions &middot; Maple Valley, Washington</span>
+        <span><a href="mailto:contact@desirsolutions.com">contact@desirsolutions.com</a></span>
+      </div>
+    </div>
   </footer>
 
   <script src="assets/app.js"></script>
 </body>
 </html>
+
 
 
