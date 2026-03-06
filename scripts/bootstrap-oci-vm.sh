@@ -17,7 +17,11 @@ REPO_URL="${REPO_URL:?Set REPO_URL before running this script}"
 DOMAIN="${DOMAIN:-desirsolutions.com}"
 EMAIL="${EMAIL:-contact@desirsolutions.com}"
 
-echo "[1/10] Verify Oracle Linux"
+CERT_DIR="$APP_DIR/certbot/conf/live/${DOMAIN}"
+FULLCHAIN_PATH="$CERT_DIR/fullchain.pem"
+PRIVKEY_PATH="$CERT_DIR/privkey.pem"
+
+echo "[1/11] Verify Oracle Linux"
 if [ ! -f /etc/oracle-release ] && ! grep -qi oracle /etc/os-release 2>/dev/null; then
   echo "WARNING: This does not appear to be Oracle Linux."
   echo "The script is designed for Oracle Linux 8/9 on OCI."
@@ -25,11 +29,11 @@ if [ ! -f /etc/oracle-release ] && ! grep -qi oracle /etc/os-release 2>/dev/null
   [[ "$yn" =~ ^[Yy]$ ]] || exit 1
 fi
 
-echo "[2/10] System update and base packages"
+echo "[2/11] System update and base packages"
 sudo dnf -y update
 sudo dnf -y install ca-certificates curl git dnf-plugins-core tar openssl
 
-echo "[3/10] Docker install"
+echo "[3/11] Docker install"
 # Oracle Linux uses the CentOS/RHEL Docker repo, not Fedora
 OL_VERSION=$(rpm -E %{rhel})
 sudo dnf config-manager --add-repo "https://download.docker.com/linux/centos/docker-ce.repo" || true
@@ -37,7 +41,7 @@ sudo dnf -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin d
 sudo systemctl enable --now docker
 sudo usermod -aG docker "$USER" || true
 
-echo "[4/10] Open OCI iptables rules"
+echo "[4/11] Open OCI iptables rules"
 # Oracle Cloud images ship with iptables rules that block ports 80/443.
 # These must be opened IN ADDITION to any OCI Security List / NSG rules.
 if sudo iptables -L INPUT -n 2>/dev/null | grep -q "DROP"; then
@@ -49,7 +53,7 @@ else
   echo "  No restrictive iptables rules detected, skipping"
 fi
 
-echo "[5/10] Firewalld setup"
+echo "[5/11] Firewalld setup"
 if command -v firewall-cmd >/dev/null 2>&1; then
   sudo systemctl enable --now firewalld
   sudo firewall-cmd --permanent --add-service=ssh
@@ -61,7 +65,7 @@ else
   echo "  firewalld not found, relying on iptables + OCI Security Lists"
 fi
 
-echo "[6/10] App directory"
+echo "[6/11] App directory"
 sudo mkdir -p /opt/desir
 sudo chown -R "$USER":"$USER" /opt/desir
 if [ ! -d "$APP_DIR/.git" ]; then
@@ -70,7 +74,7 @@ else
   cd "$APP_DIR" && git pull
 fi
 
-echo "[7/10] Create .env file (if not present)"
+echo "[7/11] Create .env file (if not present)"
 if [ ! -f "$APP_DIR/.env" ]; then
   DB_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
   SECRET=$(openssl rand -base64 32 | tr -d '/+=' | head -c 48)
@@ -91,15 +95,27 @@ else
   echo "  .env already exists, skipping"
 fi
 
-echo "[8/10] Create certbot directories"
+echo "[8/11] Create certbot directories"
 mkdir -p "$APP_DIR/certbot/conf" "$APP_DIR/certbot/www"
 
-echo "[9/10] Deploy containers"
+echo "[9/11] Ensure TLS certificate files exist for first boot"
+if [ ! -f "$FULLCHAIN_PATH" ] || [ ! -f "$PRIVKEY_PATH" ]; then
+  mkdir -p "$CERT_DIR"
+  openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+    -keyout "$PRIVKEY_PATH" \
+    -out "$FULLCHAIN_PATH" \
+    -subj "/CN=${DOMAIN}" >/dev/null 2>&1
+  echo "  temporary self-signed certificate created"
+else
+  echo "  existing certificate found, skipping"
+fi
+
+echo "[10/11] Deploy containers"
 cd "$APP_DIR"
 docker compose down || true
 docker compose up -d --build
 
-echo "[10/10] SSL certificate setup"
+echo "[11/11] SSL certificate setup"
 echo ""
 echo "=========================================="
 echo "  DEPLOYMENT COMPLETE"
@@ -114,11 +130,11 @@ echo "2. Point DNS A records to this VM's public IP:"
 echo "   ${DOMAIN}       -> $(curl -s ifconfig.me || echo '<public-ip>')"
 echo "   www.${DOMAIN}   -> $(curl -s ifconfig.me || echo '<public-ip>')"
 echo ""
-echo "3. Once DNS propagates, get SSL certificates:"
+echo "3. Once DNS propagates, issue real certificates (replaces temporary cert):"
 echo "   cd $APP_DIR"
 echo "   docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d ${DOMAIN} -d www.${DOMAIN} -m ${EMAIL} --agree-tos --non-interactive"
 echo ""
-echo "4. Restart nginx to load certs:"
+echo "4. Restart nginx to load real certs:"
 echo "   docker compose restart frontend"
 echo ""
 echo "Bootstrap complete."

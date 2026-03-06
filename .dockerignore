@@ -1,5 +1,6 @@
-# Root .dockerignore — nginx frontend image
-# Only HTML, CSS, JS, images, and nginx config should enter the image.
+# Canonical root .dockerignore for Desirtech.
+# Scope: root Dockerfile build context only (nginx static site + nginx config).
+# CRM app code is kept in this repo but built separately by docker-compose backend service.
 
 # Environment and secrets
 .env
@@ -10,13 +11,12 @@
 .git
 .gitignore
 
-# Backend project (has its own Dockerfile)
+# CRM app code (kept in repo, excluded from frontend image context)
 crm-project-Desir-Tech/
 
-# Infrastructure and scripts
+# Runtime host assets and ops scripts (not copied into frontend image)
 scripts/
 certbot/
-nginx/
 
 # Documentation
 *.md
