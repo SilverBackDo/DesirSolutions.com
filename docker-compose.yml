@@ -7,13 +7,19 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot:ro
-    depends_on:
-      backend:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "--no-check-certificate",
+          "https://127.0.0.1/",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -37,13 +43,21 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    ports:
+      - "127.0.0.1:8000:8000"
     expose:
       - "8000"
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -74,7 +88,11 @@ services:
     expose:
       - "5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-desiruser} -d ${DB_NAME:-desir}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-desiruser} -d ${DB_NAME:-desir}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -89,6 +107,28 @@ services:
       options:
         max-size: "25m"
         max-file: "5"
+    networks:
+      - desir-net
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: desir-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@desirsolutions.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?PGADMIN_DEFAULT_PASSWORD is required}
+    ports:
+      - "127.0.0.1:5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - desir-net
 
@@ -113,7 +153,9 @@ services:
 
 volumes:
   pgdata:
+  pgadmin_data:
 
 networks:
   desir-net:
     driver: bridge
+
