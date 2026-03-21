@@ -54,6 +54,22 @@ class ContactSubmissionResponse(ContactSubmissionCreate):
         from_attributes = True
 
 
+class LoginRequest(BaseModel):
+    username: str = Field(..., min_length=1, max_length=120)
+    password: str = Field(..., min_length=1, max_length=200)
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in_seconds: int
+
+
+class AuthUserResponse(BaseModel):
+    username: str
+    auth_type: str
+
+
 class LeadBase(BaseModel):
     source: str = Field(default="website", max_length=40)
     contact_submission_id: int | None = None

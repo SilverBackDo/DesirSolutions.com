@@ -4,13 +4,32 @@ import axios from 'axios';
 import './App.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || '/api';
-const API_KEY = process.env.REACT_APP_API_KEY || '';
+const TOKEN_STORAGE_KEY = 'desir_crm_access_token';
 const STAGE_OPTIONS = ['new', 'qualified', 'discovery', 'proposal', 'negotiation', 'won', 'lost', 'on_hold'];
 
 const api = axios.create({
   baseURL: API_BASE,
-  headers: API_KEY ? { 'X-API-Key': API_KEY } : {},
 });
+
+api.interceptors.request.use((config) => {
+  const token = window.localStorage.getItem(TOKEN_STORAGE_KEY);
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+      window.location.reload();
+    }
+    return Promise.reject(error);
+  }
+);
 
 function currency(value) {
   return new Intl.NumberFormat('en-US', {
@@ -22,6 +41,66 @@ function currency(value) {
 
 function StageBadge({ stage }) {
   return <span className={`badge badge-${String(stage || 'new').replace('_', '-')}`}>{stage || 'new'}</span>;
+}
+
+function Login({ onLogin }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const onSubmit = async (event) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setError('');
+    try {
+      const response = await axios.post(`${API_BASE}/auth/login`, { username, password });
+      const token = response.data?.access_token;
+      if (!token) {
+        throw new Error('Missing access token');
+      }
+      window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      onLogin(token);
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      if (typeof detail === 'string') {
+        setError(detail);
+      } else if (detail?.message) {
+        setError(detail.message);
+      } else {
+        setError('Login failed. Check credentials and auth configuration.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="page">
+      <div className="card" style={{ maxWidth: 420, margin: '3rem auto' }}>
+        <h2 style={{ marginBottom: '1rem' }}>CRM Sign In</h2>
+        <form className="form-grid" onSubmit={onSubmit}>
+          <input
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+          <input
+            placeholder="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button type="submit" disabled={submitting}>
+            {submitting ? 'Signing In...' : 'Sign In'}
+          </button>
+          {error ? <p className="status-err" style={{ fontSize: '0.95rem' }}>{error}</p> : null}
+        </form>
+      </div>
+    </div>
+  );
 }
 
 // ─── Dashboard Page ───
@@ -665,6 +744,21 @@ function Payments() {
 
 // ─── App ───
 function App() {
+  const [token, setToken] = useState(() => window.localStorage.getItem(TOKEN_STORAGE_KEY));
+
+  const logout = () => {
+    window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+    setToken(null);
+  };
+
+  if (!token) {
+    return (
+      <Router>
+        <Login onLogin={setToken} />
+      </Router>
+    );
+  }
+
   return (
     <Router>
       <div className="app">
@@ -677,6 +771,9 @@ function App() {
             <Link to="/opportunities">Opportunities</Link>
             <Link to="/invoices">Invoices</Link>
             <Link to="/payments">Payments</Link>
+            <button type="button" onClick={logout} style={{ background: 'transparent', border: 0, color: '#a4b0be', cursor: 'pointer', fontWeight: 500 }}>
+              Sign Out
+            </button>
           </div>
         </nav>
         <main>

@@ -12,8 +12,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.database import Base, engine
-from app.routes import health, clients, contact, leads, opportunities, pipeline, dashboard, invoices, payments
+from app.routes import (
+    auth as auth_routes,
+    clients,
+    contact,
+    dashboard,
+    health,
+    invoices,
+    leads,
+    opportunities,
+    payments,
+    pipeline,
+)
 
 # ─── Logging ───
 logging.basicConfig(
@@ -59,6 +69,7 @@ app.add_middleware(
 
 # ─── Routes ───
 app.include_router(health.router, tags=["Health"])
+app.include_router(auth_routes.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(clients.router, prefix="/api/clients", tags=["Clients"])
 app.include_router(contact.router, prefix="/api/contact", tags=["Contact"])
 app.include_router(leads.router, prefix="/api/leads", tags=["Leads"])
@@ -70,19 +81,10 @@ app.include_router(
 app.include_router(invoices.router, prefix="/api/invoices", tags=["Invoices"])
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 
-# ─── Create tables ───
-from app.models import (  # noqa: E402, F401
-    Client,
-    ContactSubmission,
-    Lead,
-    Opportunity,
-    OpportunityActivity,
-    Invoice,
-    IncomingPayment,
+logger.info(
+    "DesirTech CRM API started (env=%s); schema managed externally via SQL runbooks.",
+    settings.env,
 )
-Base.metadata.create_all(bind=engine)
-
-logger.info("DesirTech CRM API started (env=%s)", settings.env)
 
 
 @app.get("/")

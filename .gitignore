@@ -20,9 +20,10 @@ venv/
 node_modules/
 npm-debug.log*
 
-# ─── Docker ───
-*.log
-
+platform/.env
+platform/terraform/*.tfvars
+platform/terraform/.terraform/
+platform/traefik/acme/acme.json
 # ─── IDE ───
 .vscode/
 .idea/
@@ -37,7 +38,10 @@ Thumbs.db
 # ─── Backups ───
 *.sql
 *.sql.gz
+!db/sql/*.sql
 
 # ─── Temp / Claude ───
 tmpclaude-*
 *.ini
+
+

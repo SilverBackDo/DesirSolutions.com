@@ -49,7 +49,7 @@
       <div class="container" style="max-width: 780px;">
         <div class="form-card">
           <h2>Consultation Request</h2>
-          <form action="/api/contact/" method="post">
+          <form id="contactForm" data-contact-form action="/api/contact/" method="post">
             <!-- Honeypot — hidden from real users -->
             <div class="hp-field" aria-hidden="true">
               <label for="website">Website</label>
@@ -78,6 +78,7 @@
             <div style="margin-top: 20px;">
               <button class="btn primary" type="submit">Submit Consultation Request</button>
             </div>
+            <p id="contactFormStatus" role="status" aria-live="polite" style="margin-top: 12px;"></p>
           </form>
         </div>
       </div>

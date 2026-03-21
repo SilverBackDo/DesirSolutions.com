@@ -1,10 +1,12 @@
 # Desir Solutions Oracle Cloud Deployment Guide
 
-**Project:** Desirtech Website + CRM Backend
+**Project:** Desir Solutions Website + CRM Backend
 **Source of Truth:** `Desirtech` root (infrastructure + deployment)
 **Target:** Oracle Cloud Infrastructure (OCI) Always Free Tier
 **OS:** Oracle Linux 8 or 9 (ARM / Ampere A1)
 **Stack:** nginx + FastAPI + PostgreSQL 16 + Docker Compose + Let's Encrypt SSL
+
+**DB Initialization:** `scripts/apply-db-schema.sh` applies canonical schema, seed data, and operational views.
 
 ---
 
@@ -82,21 +84,22 @@ EMAIL=contact@desirsolutions.com \
 bash bootstrap-oci-vm.sh
 ```
 
-### What the script does (11 steps):
+### What the script does (12 steps):
 
-| Step  | Action                                                            |
-| ----- | ----------------------------------------------------------------- |
-| 1/11  | Verifies Oracle Linux                                             |
-| 2/11  | System update, installs base packages (git, curl, openssl)       |
-| 3/11  | Installs Docker CE from the CentOS/RHEL repository               |
-| 4/11  | Opens ports 80 and 443 in OCI's default iptables rules           |
-| 5/11  | Configures firewalld for SSH, HTTP, HTTPS                        |
-| 6/11  | Clones the repo to /opt/desir/Desirtech                          |
-| 7/11  | Generates .env with random DB password and secret key (chmod 600)|
-| 8/11  | Creates certbot directories for SSL certificates                 |
-| 9/11  | Ensures temporary TLS files exist for first boot                 |
-| 10/11 | Builds and starts all Docker containers                          |
-| 11/11 | Prints DNS and SSL next steps                                    |
+| Step  | Action                                                                  |
+| ----- | ----------------------------------------------------------------------- |
+| 1/12  | Verifies Oracle Linux                                                   |
+| 2/12  | System update, installs base packages (git, curl, openssl)             |
+| 3/12  | Installs Docker CE from the CentOS/RHEL repository                     |
+| 4/12  | Opens ports 80 and 443 in OCI's default iptables rules                 |
+| 5/12  | Configures firewalld for SSH, HTTP, HTTPS                              |
+| 6/12  | Clones the repo to /opt/desir/Desirtech                                |
+| 7/12  | Generates `.env` with DB/app/admin credentials (`chmod 600`)           |
+| 8/12  | Creates certbot directories for SSL certificates                        |
+| 9/12  | Ensures temporary TLS files exist for first boot                        |
+| 10/12 | Builds and starts all Docker containers                                 |
+| 11/12 | Applies canonical DB schema + views (`01_full_schema`, seeds, views)   |
+| 12/12 | Prints DNS and SSL next steps                                           |
 
 ### Environment variables:
 
@@ -105,6 +108,26 @@ bash bootstrap-oci-vm.sh
 | REPO_URL | Yes      | —                         | Git repository URL            |
 | DOMAIN   | No       | desirsolutions.com         | Primary domain                |
 | EMAIL    | No       | contact@desirsolutions.com | SSL certificate notifications |
+| CRM_ADMIN_USER | No | admin | Initial CRM admin username written to `.env` |
+| CRM_ADMIN_PASS | No | random | Initial CRM admin password written to `.env` |
+
+### Rotate CRM Admin Password After Bootstrap
+
+On the VM, generate a new strong password:
+
+```bash
+cd /opt/desir/Desirtech
+docker compose exec -T backend python -c 'import secrets, string; chars = string.ascii_letters + string.digits + "-_"; print("CRM_ADMIN_PASSWORD=" + "".join(secrets.choice(chars) for _ in range(32)))'
+```
+
+Update `/opt/desir/Desirtech/.env` with the new `CRM_ADMIN_PASSWORD`, then apply:
+
+```bash
+cd /opt/desir/Desirtech
+docker compose up -d backend
+```
+
+Note: keep using `CRM_ADMIN_PASSWORD` for now. `CRM_ADMIN_PASSWORD_HASH` is available in config but depends on compatible `passlib`/`bcrypt` versions for reliable verification.
 
 ---
 
@@ -385,6 +408,8 @@ All services have health checks configured. Docker will automatically restart un
 | backend  | python urllib localhost:8000/health | 30s      | 10s     |
 | db       | pg_isready                          | 10s      | 5s      |
 
+For `docker-compose.local.yml`, frontend health check uses `http://127.0.0.1/`.
+
 ### Check health status
 
 ```bash
@@ -401,6 +426,17 @@ curl https://desirsolutions.com/api/health/db
 # Direct backend container port (local/dev)
 curl http://localhost:8000/health
 curl http://localhost:8000/health/db
+```
+
+### Dashboard readiness
+
+- Dashboard routes are fail-closed by design.
+- If financial views are missing, `/api/dashboard/*` returns `503` with code `FIN_DASHBOARD_NOT_INITIALIZED`.
+- Reapply schema/views:
+
+```bash
+cd /opt/desir/Desirtech
+./scripts/apply-db-schema.sh
 ```
 
 ---
@@ -443,10 +479,12 @@ curl http://localhost:8000/health/db
 
 ### Application
 
-- No insecure defaults — `db_password` and `secret_key` must be set via environment
+- No insecure defaults — `db_password`, `secret_key`, and CRM admin credentials must be set via environment
+- Production auth path uses `CRM_ADMIN_PASSWORD` from `.env` (`chmod 600` file permissions)
 - Debug mode defaults to `false` in production
 - Swagger/ReDoc API docs disabled in production (only available when `DEBUG=true`)
 - CORS restricted to specific origins, methods, and headers
+- CRM protected endpoints support JWT bearer auth for users (API key kept for automation fallback)
 - All input fields have `max_length` validation (prevents memory exhaustion)
 - Pagination capped at 100 results per request
 - Global exception handler returns generic errors (no stack traces to clients)

@@ -21,4 +21,6 @@ jobs:
                       git pull --ff-only
                       docker compose down
                       docker compose up -d --build
+                      chmod +x scripts/apply-db-schema.sh
+                      ./scripts/apply-db-schema.sh
                       docker image prune -f

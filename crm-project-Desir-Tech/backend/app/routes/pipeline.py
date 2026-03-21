@@ -6,12 +6,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.auth import require_api_key
+from app.auth import require_internal_access
 from app.database import get_db
 from app.models import Opportunity
 from app.schemas import PipelineStageSummaryResponse
 
-router = APIRouter(dependencies=[Depends(require_api_key)])
+router = APIRouter(dependencies=[Depends(require_internal_access)])
 
 
 @router.get("/summary", response_model=list[PipelineStageSummaryResponse])
