@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from app.auth import require_api_key
+from app.auth import require_internal_access
 from app.database import get_db
 from app.models import ContactSubmission
 from app.schemas import ContactSubmissionCreate, ContactSubmissionResponse
@@ -49,7 +49,7 @@ async def submit_contact(
 
 
 @router.get("/", response_model=list[ContactSubmissionResponse],
-            dependencies=[Depends(require_api_key)])
+            dependencies=[Depends(require_internal_access)])
 async def list_submissions(
     skip: int = Query(0, ge=0, le=10000),
     limit: int = Query(100, ge=1, le=100),

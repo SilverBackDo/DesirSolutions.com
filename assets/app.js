@@ -28,3 +28,42 @@ document.querySelectorAll('.engage-tab').forEach((tab) => {
     if (panel) panel.classList.add('active');
   });
 });
+
+// ── Contact form async UX ──
+const contactForm = document.querySelector('[data-contact-form]');
+if (contactForm) {
+  const statusEl = document.getElementById('contactFormStatus');
+  contactForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (statusEl) {
+      statusEl.textContent = 'Submitting...';
+      statusEl.style.color = '#64748b';
+    }
+
+    try {
+      const formData = new FormData(contactForm);
+      const response = await fetch(contactForm.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Submission failed');
+      }
+
+      contactForm.reset();
+      if (statusEl) {
+        statusEl.textContent = 'Thank you. Your request has been received. We will follow up within one business day.';
+        statusEl.style.color = '#166534';
+      }
+    } catch (error) {
+      if (statusEl) {
+        statusEl.textContent = 'Submission could not be completed. Please retry or email contact@desirsolutions.com.';
+        statusEl.style.color = '#b91c1c';
+      }
+    }
+  });
+}

@@ -1,0 +1,36 @@
+#!/bin/bash
+set -euxo pipefail
+
+if command -v dnf >/dev/null 2>&1; then
+  dnf -y install git || true
+fi
+
+if [ ! -d /opt/consulting-mini-cloud/.git ]; then
+  git clone --branch '${platform_repo_ref}' '${platform_repo_url}' /opt/consulting-mini-cloud
+else
+  git -C /opt/consulting-mini-cloud fetch --all --prune
+  git -C /opt/consulting-mini-cloud checkout '${platform_repo_ref}'
+  git -C /opt/consulting-mini-cloud pull --ff-only origin '${platform_repo_ref}'
+fi
+
+install -d -m 0755 /srv/platform
+cat >/srv/platform/.env <<'ENVFILE'
+LETSENCRYPT_EMAIL=${letsencrypt_email}
+TRAEFIK_DASHBOARD_HOST=${traefik_dashboard_host}
+TRAEFIK_DASHBOARD_USERS=${traefik_dashboard_users}
+TZ=${timezone}
+BELLAHBURGER_DOMAIN=${bellahburger_domain}
+BELLAHBURGER_REPO_URL=${bellahburger_repo_url}
+BELLAHBURGER_REPO_BRANCH=${bellahburger_repo_branch}
+BELLAHBURGER_PUBLIC_SUBDIR=${bellahburger_public_subdir}
+DESIRSOLUTIONS_DOMAIN=${desirsolutions_domain}
+DESIRSOLUTIONS_REPO_URL=${desirsolutions_repo_url}
+DESIRSOLUTIONS_REPO_BRANCH=${desirsolutions_repo_branch}
+DESIRSOLUTIONS_PUBLIC_SUBDIR=${desirsolutions_public_subdir}
+ALCINES_DOMAIN=${alcines_domain}
+ENVFILE
+chmod 600 /srv/platform/.env
+
+cd /opt/consulting-mini-cloud
+bash platform/scripts/bootstrap-host.sh
+bash platform/scripts/deploy-platform.sh

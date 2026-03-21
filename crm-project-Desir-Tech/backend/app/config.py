@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     allowed_origins: str = "https://desirsolutions.com,https://www.desirsolutions.com"
     env: str = "production"
     debug: bool = False
+    auth_jwt_algorithm: str = "HS256"
+    auth_access_token_exp_minutes: int = 480
+    crm_admin_username: str | None = None
+    crm_admin_password: str | None = None
+    crm_admin_password_hash: str | None = None
 
     @property
     def database_url(self) -> str:
@@ -29,6 +34,13 @@ class Settings(BaseSettings):
     @property
     def allowed_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.allowed_origins.split(",")]
+
+    @property
+    def crm_user_auth_enabled(self) -> bool:
+        return bool(
+            self.crm_admin_username
+            and (self.crm_admin_password_hash or self.crm_admin_password)
+        )
 
     class Config:
         env_file = ".env"

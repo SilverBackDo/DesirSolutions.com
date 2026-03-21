@@ -1,0 +1,22 @@
+ERROR: Could not find config file at /oracle/.oci/config
+Do you want to create a new config file? [Y/n]: Do you want to create your config file by logging in through a browser? [Y/n]: ERROR: Could not locate a runnable browser
+Switching to browserless config file setup process
+    This command provides a walkthrough of creating a valid CLI config file.
+
+    The following links explain where to find the information required by this
+    script:
+
+    User API Signing Key, OCID and Tenancy OCID:
+
+        https://docs.cloud.oracle.com/Content/API/Concepts/apisigningkey.htm#Other
+
+    Region:
+
+        https://docs.cloud.oracle.com/Content/General/Concepts/regions.htm
+
+    General config documentation:
+
+        https://docs.cloud.oracle.com/Content/API/Concepts/sdkconfig.htm
+
+
+Enter a location for your config [/oracle/.oci/config]: 

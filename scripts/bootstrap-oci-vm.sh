@@ -78,6 +78,8 @@ echo "[7/11] Create .env file (if not present)"
 if [ ! -f "$APP_DIR/.env" ]; then
   DB_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
   SECRET=$(openssl rand -base64 32 | tr -d '/+=' | head -c 48)
+  CRM_ADMIN_USER="${CRM_ADMIN_USER:-admin}"
+  CRM_ADMIN_PASS="${CRM_ADMIN_PASS:-$(openssl rand -base64 24 | tr -d '/+=' | head -c 24)}"
   cat > "$APP_DIR/.env" <<ENVEOF
 DB_HOST=db
 DB_PORT=5432
@@ -86,11 +88,17 @@ DB_USER=desiruser
 DB_PASSWORD=${DB_PASS}
 SECRET_KEY=${SECRET}
 ALLOWED_ORIGINS=https://${DOMAIN},https://www.${DOMAIN}
+AUTH_JWT_ALGORITHM=HS256
+AUTH_ACCESS_TOKEN_EXP_MINUTES=480
+CRM_ADMIN_USERNAME=${CRM_ADMIN_USER}
+CRM_ADMIN_PASSWORD=${CRM_ADMIN_PASS}
 ENV=production
 DEBUG=false
 ENVEOF
   chmod 600 "$APP_DIR/.env"
   echo "  .env created with generated credentials (chmod 600)"
+  echo "  CRM admin username: ${CRM_ADMIN_USER}"
+  echo "  CRM admin password: ${CRM_ADMIN_PASS}"
 else
   echo "  .env already exists, skipping"
 fi
@@ -110,12 +118,20 @@ else
   echo "  existing certificate found, skipping"
 fi
 
-echo "[10/11] Deploy containers"
+echo "[10/12] Deploy containers"
 cd "$APP_DIR"
 docker compose down || true
 docker compose up -d --build
 
-echo "[11/11] SSL certificate setup"
+echo "[11/12] Apply database schema and dashboard views"
+if [ -f "$APP_DIR/scripts/apply-db-schema.sh" ]; then
+  chmod +x "$APP_DIR/scripts/apply-db-schema.sh"
+  "$APP_DIR/scripts/apply-db-schema.sh"
+else
+  echo "  WARNING: scripts/apply-db-schema.sh not found; skipping DB schema apply"
+fi
+
+echo "[12/12] SSL certificate setup"
 echo ""
 echo "=========================================="
 echo "  DEPLOYMENT COMPLETE"

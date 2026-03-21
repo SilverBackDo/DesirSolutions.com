@@ -5,12 +5,12 @@ Lead management endpoints.
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.auth import require_api_key
+from app.auth import require_internal_access
 from app.database import get_db
 from app.models import Lead
 from app.schemas import LeadCreate, LeadUpdate, LeadResponse
 
-router = APIRouter(dependencies=[Depends(require_api_key)])
+router = APIRouter(dependencies=[Depends(require_internal_access)])
 
 
 @router.get("/", response_model=list[LeadResponse])

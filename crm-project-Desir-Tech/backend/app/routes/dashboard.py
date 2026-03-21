@@ -6,12 +6,12 @@ import csv
 import io
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.auth import require_api_key
+from app.auth import require_internal_access
 from app.database import get_db
 from app.schemas import (
     PipelineStageSummaryResponse,
@@ -22,7 +22,13 @@ from app.schemas import (
     DashboardKpisResponse,
 )
 
-router = APIRouter(dependencies=[Depends(require_api_key)])
+router = APIRouter(dependencies=[Depends(require_internal_access)])
+
+_REQUIRED_FINANCIAL_VIEWS = (
+    "vw_accounts_receivable",
+    "vw_monthly_cashflow",
+    "vw_tax_position",
+)
 
 
 def _csv_response(rows: list[dict], filename: str) -> Response:
@@ -45,12 +51,43 @@ def _month_floor(value: date) -> date:
     return value.replace(day=1)
 
 
+def _assert_financial_views_ready(db: Session) -> None:
+    rows = db.execute(
+        text(
+            """
+            select table_name
+            from information_schema.views
+            where table_schema = current_schema()
+              and table_name in (
+                'vw_accounts_receivable',
+                'vw_monthly_cashflow',
+                'vw_tax_position'
+              )
+            """
+        )
+    ).mappings().all()
+    existing = {str(row["table_name"]) for row in rows}
+    missing = sorted(set(_REQUIRED_FINANCIAL_VIEWS) - existing)
+    if not missing:
+        return
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail={
+            "code": "FIN_DASHBOARD_NOT_INITIALIZED",
+            "message": "Financial dashboard views are not initialized.",
+            "missing_views": missing,
+        },
+    )
+
+
 @router.get("/summary", response_model=DashboardSummaryResponse)
 async def dashboard_summary(
     from_date: date | None = Query(None),
     to_date: date | None = Query(None),
     db: Session = Depends(get_db),
 ):
+    _assert_financial_views_ready(db)
+
     pipeline_sql = """
       select
         stage,
@@ -211,6 +248,8 @@ async def dashboard_summary(
 
 @router.get("/kpis", response_model=DashboardKpisResponse)
 async def dashboard_kpis(db: Session = Depends(get_db)):
+    _assert_financial_views_ready(db)
+
     pipeline = db.execute(
         text(
             """
@@ -263,6 +302,8 @@ async def export_accounts_receivable_csv(
     to_date: date | None = Query(None),
     db: Session = Depends(get_db),
 ):
+    _assert_financial_views_ready(db)
+
     sql = """
       select invoice_id, invoice_number, client_id, client_name, invoice_date, due_date,
              total_amount, amount_paid, amount_outstanding, status
@@ -288,6 +329,8 @@ async def export_monthly_cashflow_csv(
     to_date: date | None = Query(None),
     db: Session = Depends(get_db),
 ):
+    _assert_financial_views_ready(db)
+
     sql = """
       select month, incoming_amount, outgoing_amount, net_cashflow
       from vw_monthly_cashflow
@@ -312,6 +355,8 @@ async def export_tax_position_csv(
     to_date: date | None = Query(None),
     db: Session = Depends(get_db),
 ):
+    _assert_financial_views_ready(db)
+
     sql = """
       select id, tax_name, jurisdiction, period_start, period_end, due_date, paid_date,
              amount_due, amount_paid, balance_due, status
