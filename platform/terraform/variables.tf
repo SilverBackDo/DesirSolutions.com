@@ -222,6 +222,12 @@ variable "assign_public_ip" {
   default     = true
 }
 
+variable "ssh_allowed_cidrs" {
+  type        = list(string)
+  description = "Approved source CIDRs for SSH access. Leave empty to require another admin-access path such as OCI Bastion."
+  default     = []
+}
+
 variable "image_ocid" {
   type        = string
   description = "Optional explicit Oracle Linux image OCID override."

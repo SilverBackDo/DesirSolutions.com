@@ -1,112 +1,30 @@
-# OCI Mini Cloud Platform
+# OCI Platform Notes
 
-This bundle provisions and deploys the requested Oracle Cloud Infrastructure hosting platform:
+This directory contains OCI infrastructure assets related to the broader Desir Solutions hosting model.
 
-- Free Tier ARM VM on `VM.Standard.A1.Flex`
-- Traefik reverse proxy with automatic Let's Encrypt certificates
-- Three Docker-served websites on one host
-- GitHub-based deployment workflow
-- Idempotent bootstrap and redeploy scripts
+## Launch Position
 
-## Layout
+For the first 30-day launch window, the recommended production path is the simpler root `Desirtech` website and CRM deployment model, not a multi-site platform rollout.
 
-- `compose.yaml` - Traefik plus three website containers
-- `scripts/bootstrap-host.sh` - installs Docker, opens host firewall ports, creates `/srv/platform`
-- `scripts/deploy-platform.sh` - syncs site content and starts or updates containers
-- `scripts/generate-dashboard-users.sh` - creates the Traefik basic-auth value
-- `sites/consultant-profile/` - generated consultant profile website for `alcines.com`
-- `terraform/` - OCI network and compute provisioning
+Use this directory when you need OCI infrastructure-as-code support, but keep the day-one business deployment focused on:
 
-## Expected Host Directories
+- one Desir Solutions site
+- one protected admin path
+- one documented deploy workflow
 
-The bootstrap script creates and maintains:
+## Terraform Security Change
 
-- `/srv/platform`
-- `/srv/platform/traefik`
-- `/srv/platform/bellahburger`
-- `/srv/platform/desirsolutions`
-- `/srv/platform/Alcines`
+`platform/terraform/` no longer opens SSH to `0.0.0.0/0`.
 
-Each website gets a `repo/` checkout and a `current/` publish directory under its platform path.
+You must now explicitly set:
 
-## Required Inputs
+- `ssh_allowed_cidrs`
 
-1. Create `/srv/platform/.env` from `platform/.env.example`.
-2. Set:
-   - `LETSENCRYPT_EMAIL`
-   - `TRAEFIK_DASHBOARD_HOST`
-   - `TRAEFIK_DASHBOARD_USERS`
-   - `BELLAHBURGER_REPO_URL`
-   - `BELLAHBURGER_DOMAIN`
-   - `DESIRSOLUTIONS_DOMAIN`
-   - `ALCINES_DOMAIN`
-3. If your GitHub repos are private, install a deploy key for the VM so `git clone` and `git pull` work non-interactively.
+If you prefer a stronger pattern, keep `ssh_allowed_cidrs = []` and use OCI Bastion or another approved administrative access method.
 
-`DESIRSOLUTIONS_REPO_URL` defaults to the current repository remote:
+## Practical Day-One Guidance
 
-- `https://github.com/SilverBackDo/DesirSolutions.com.git`
-
-## Traefik Dashboard Auth
-
-Generate the `TRAEFIK_DASHBOARD_USERS` value with:
-
-```bash
-./platform/scripts/generate-dashboard-users.sh admin 'replace-with-strong-password'
-```
-
-Put the output directly into `/srv/platform/.env`.
-
-## Manual Host Bootstrap
-
-On the OCI VM:
-
-```bash
-cd /opt/consulting-mini-cloud
-bash platform/scripts/bootstrap-host.sh
-bash platform/scripts/deploy-platform.sh
-```
-
-The scripts are safe to re-run.
-
-## Terraform Flow
-
-1. Copy `platform/terraform/terraform.tfvars.example` to a local `terraform.tfvars`.
-2. Fill OCI auth values, SSH public key, and repo and domain settings.
-3. Run:
-
-```bash
-terraform -chdir=platform/terraform init
-terraform -chdir=platform/terraform apply
-```
-
-The module:
-
-- reuses matching VCN, subnet, internet gateway, route table, security list, and instance when they already exist by display name or supplied OCID
-- creates missing resources with the requested CIDRs and instance shape
-- injects cloud-init to bootstrap Docker and deploy the platform automatically
-
-## GitHub Deployment
-
-Workflow:
-
-- `.github/workflows/deploy-platform.yml`
-
-Required secrets:
-
-- `OCI_VM_HOST`
-- `OCI_VM_USER`
-- `OCI_VM_SSH_KEY`
-
-The workflow pulls the repo on the VM and re-runs `platform/scripts/deploy-platform.sh`.
-
-## Verification Commands
-
-On the VM:
-
-```bash
-docker ps
-docker logs reverse-proxy --tail 100
-curl -I https://bellahburger.com
-curl -I https://desirsolutions.com
-curl -I https://alcines.com
-```
+- keep HTTP and HTTPS public only for the website
+- restrict SSH to approved admin IP ranges or Bastion
+- keep internal tools off the public edge where possible
+- prefer a single production website stack before adding multi-site complexity

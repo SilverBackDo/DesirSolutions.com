@@ -82,14 +82,18 @@ resource "oci_core_security_list" "platform" {
   display_name   = var.security_list_display_name
   freeform_tags  = local.managed_tags
 
-  ingress_security_rules {
-    protocol    = "6"
-    source      = "0.0.0.0/0"
-    description = "Allow SSH"
+  dynamic "ingress_security_rules" {
+    for_each = var.ssh_allowed_cidrs
 
-    tcp_options {
-      min = 22
-      max = 22
+    content {
+      protocol    = "6"
+      source      = ingress_security_rules.value
+      description = "Allow SSH from approved admin CIDR"
+
+      tcp_options {
+        min = 22
+        max = 22
+      }
     }
   }
 

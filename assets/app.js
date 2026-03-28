@@ -33,6 +33,29 @@ document.querySelectorAll('.engage-tab').forEach((tab) => {
 const contactForm = document.querySelector('[data-contact-form]');
 if (contactForm) {
   const statusEl = document.getElementById('contactFormStatus');
+  const usesStaticFallback = window.location.hostname.endsWith('github.io');
+
+  const buildMailtoHref = (formData) => {
+    const subject = `[Assessment Request] ${formData.get('company') || 'New Inquiry'} - ${formData.get('priority') || 'General Inquiry'}`;
+    const lines = [
+      'Assessment inquiry details',
+      '',
+      `Name: ${formData.get('name') || ''}`,
+      `Email: ${formData.get('email') || ''}`,
+      `Company: ${formData.get('company') || ''}`,
+      `Role: ${formData.get('role') || ''}`,
+      `Primary Environment: ${formData.get('environment') || ''}`,
+      `Timeline: ${formData.get('timeline') || ''}`,
+      `Primary Need: ${formData.get('priority') || ''}`,
+      `Environment Scope: ${formData.get('infrastructure_scope') || ''}`,
+      `Budget Range: ${formData.get('budget_band') || ''}`,
+      '',
+      'Current situation:',
+      `${formData.get('message') || ''}`,
+    ];
+    return `mailto:contact@desirsolutions.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`;
+  };
+
   contactForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (statusEl) {
@@ -42,6 +65,15 @@ if (contactForm) {
 
     try {
       const formData = new FormData(contactForm);
+      if (usesStaticFallback) {
+        if (statusEl) {
+          statusEl.textContent = 'The secure intake API is unavailable on this public preview. Your email client will open so you can send the request directly.';
+          statusEl.style.color = '#1d4ed8';
+        }
+        window.location.href = buildMailtoHref(formData);
+        return;
+      }
+
       const response = await fetch(contactForm.action, {
         method: 'POST',
         body: formData,

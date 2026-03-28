@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contact Desir Solutions | Modernization and Engineering Consulting</title>
-  <meta name="description" content="Contact Desir Solutions to discuss modernization consulting, automation engineering, and talent solutions for cloud, hybrid, and self-hosted environments." />
-  <meta property="og:title" content="Contact Desir Solutions | Modernization and Engineering Consulting" />
-  <meta property="og:description" content="Contact Desir Solutions for modernization consulting, automation engineering, and talent solutions." />
+  <title>Contact | Desir Solutions</title>
+  <meta name="description" content="Request the Desir Solutions infrastructure assessment or discuss a modernization sprint, fractional advisory support, or contract delivery need." />
+  <meta property="og:title" content="Contact | Desir Solutions" />
+  <meta property="og:description" content="Request the infrastructure assessment or discuss a modernization sprint, advisory engagement, or contract delivery need." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.desirsolutions.com/contact.html" />
   <meta property="og:site_name" content="Desir Solutions" />
@@ -20,16 +20,11 @@
       <nav>
         <ul>
           <li><a href="index.html">Home</a></li>
-          <li class="dropdown">
-            <a href="services.html">Services</a>
-            <ul class="dropdown-menu">
-              <li><a href="services.html">Services Overview</a></li>
-              <li><a href="services-outsourcing.html">Services Outsourcing</a></li>
-              <li><a href="talent.html">Talent Solutions</a></li>
-            </ul>
-          </li>
+          <li><a href="services.html">Services</a></li>
+          <li><a href="assessment.html">Assessment</a></li>
           <li><a href="industries.html">Industries</a></li>
           <li><a href="about.html">About</a></li>
+          <li><a href="trust.html">Trust</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
       </nav>
@@ -38,19 +33,18 @@
 
   <section class="hero">
     <div class="container">
-      <h1>Let's Discuss Your Modernization and Engineering Requirements.</h1>
-      <p>Share your current environment and objectives. We provide a response with clear next steps within one business day.</p>
+      <h1>Start with the right first engagement.</h1>
+      <p>Use this form to request the Infrastructure Stability &amp; Automation Assessment, scope a modernization sprint, or discuss founder-led contract support. Desir Solutions responds within one business day.</p>
     </div>
   </section>
 
   <main>
-    <!-- ── Contact Form ── -->
     <section class="section">
-      <div class="container" style="max-width: 780px;">
+      <div class="container" style="max-width: 860px;">
         <div class="form-card">
-          <h2>Consultation Request</h2>
+          <h2>Request a Conversation</h2>
+          <p>If the secure intake API is unavailable on the public preview, this form falls back to opening your email client with the request details prefilled.</p>
           <form id="contactForm" data-contact-form action="/api/contact/" method="post">
-            <!-- Honeypot — hidden from real users -->
             <div class="hp-field" aria-hidden="true">
               <label for="website">Website</label>
               <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
@@ -59,24 +53,66 @@
             <div class="form-grid">
               <div><label for="name">Name</label><input id="name" name="name" required /></div>
               <div><label for="email">Email</label><input id="email" type="email" name="email" required /></div>
-              <div><label for="company">Company</label><input id="company" name="company" /></div>
-              <div><label for="role">Role</label><input id="role" name="role" /></div>
-              <div><label for="environment">Environment</label>
+              <div><label for="company">Company</label><input id="company" name="company" required /></div>
+              <div><label for="role">Role</label><input id="role" name="role" required /></div>
+              <div>
+                <label for="environment">Primary Environment</label>
                 <select id="environment" name="environment">
                   <option value="">Select...</option>
-                  <option>Cloud</option>
-                  <option>Hybrid</option>
-                  <option>Self-Hosted</option>
+                  <option>Linux / RHEL</option>
+                  <option>VMware / On-Prem</option>
+                  <option>Hybrid Cloud</option>
+                  <option>OCI / Cloud Hosting</option>
+                  <option>Automation / CI-CD</option>
                 </select>
               </div>
-              <div><label for="timeline">Timeline &amp; Urgency</label><input id="timeline" name="timeline" /></div>
+              <div>
+                <label for="timeline">Timeline</label>
+                <select id="timeline" name="timeline">
+                  <option value="">Select...</option>
+                  <option>Immediate - this month</option>
+                  <option>30-60 days</option>
+                  <option>This quarter</option>
+                  <option>Planning stage</option>
+                </select>
+              </div>
+              <div>
+                <label for="priority">Primary Need</label>
+                <select id="priority" name="priority">
+                  <option value="">Select...</option>
+                  <option>Assessment</option>
+                  <option>Modernization Sprint</option>
+                  <option>Fractional Advisory</option>
+                  <option>Contract Support</option>
+                </select>
+              </div>
+              <div>
+                <label for="infrastructure_scope">Environment Scope</label>
+                <select id="infrastructure_scope" name="infrastructure_scope">
+                  <option value="">Select...</option>
+                  <option>Single application or workflow</option>
+                  <option>Multiple servers or services</option>
+                  <option>Multi-site environment</option>
+                  <option>Need help defining scope</option>
+                </select>
+              </div>
+              <div>
+                <label for="budget_band">Budget Range</label>
+                <select id="budget_band" name="budget_band">
+                  <option value="">Select...</option>
+                  <option>Assessment budget only</option>
+                  <option>$5,000-$15,000</option>
+                  <option>$15,000-$30,000</option>
+                  <option>$30,000+</option>
+                </select>
+              </div>
             </div>
             <div style="margin-top: 16px;">
-              <label for="message">How can we help?</label>
-              <textarea id="message" name="message"></textarea>
+              <label for="message">What is happening in the environment right now?</label>
+              <textarea id="message" name="message" placeholder="Describe the current problem, the systems involved, and what happens if it is not addressed soon."></textarea>
             </div>
             <div style="margin-top: 20px;">
-              <button class="btn primary" type="submit">Submit Consultation Request</button>
+              <button class="btn primary" type="submit">Submit Request</button>
             </div>
             <p id="contactFormStatus" role="status" aria-live="polite" style="margin-top: 12px;"></p>
           </form>
@@ -84,35 +120,27 @@
       </div>
     </section>
 
-    <!-- ── Direct Contact ── -->
     <section class="section section--alt">
-      <div class="container" style="max-width: 780px;">
+      <div class="container" style="max-width: 860px;">
         <h2>Direct Contact</h2>
-        <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-          <div class="card" style="text-align: center;">
-            <h3>Email</h3>
+        <p class="section-subtitle">Desir Solutions LLC is a Washington-based consulting business operating from Maple Valley, Washington and serving clients remotely.</p>
+        <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+          <article class="card" style="text-align:center;">
+            <h3>General</h3>
             <p><a href="mailto:contact@desirsolutions.com">contact@desirsolutions.com</a></p>
-          </div>
-          <div class="card" style="text-align: center;">
+          </article>
+          <article class="card" style="text-align:center;">
             <h3>Legal</h3>
             <p><a href="mailto:legal@desirsolutions.com">legal@desirsolutions.com</a></p>
-          </div>
-          <div class="card" style="text-align: center;">
-            <h3>Privacy</h3>
-            <p><a href="mailto:privacy@desirsolutions.com">privacy@desirsolutions.com</a></p>
-          </div>
-          <div class="card" style="text-align: center;">
-            <h3>Invoicing</h3>
+          </article>
+          <article class="card" style="text-align:center;">
+            <h3>Billing</h3>
             <p><a href="mailto:invoices@desirsolutions.com">invoices@desirsolutions.com</a></p>
-          </div>
-          <div class="card" style="text-align: center;">
-            <h3>Website</h3>
-            <p><a href="https://www.desirsolutions.com">www.desirsolutions.com</a></p>
-          </div>
-          <div class="card" style="text-align: center;">
-            <h3>Location</h3>
-            <p>Maple Valley, WA 98038</p>
-          </div>
+          </article>
+          <article class="card" style="text-align:center;">
+            <h3>Trust Center</h3>
+            <p><a href="trust.html">Review operating controls</a></p>
+          </article>
         </div>
       </div>
     </section>
@@ -123,28 +151,29 @@
       <div class="footer-grid">
         <div>
           <div class="footer-brand">Desir Solutions</div>
-          <p><em>Modern Infrastructure. Automated Delivery. Exceptional Talent.</em></p>
+          <p><em>Infrastructure Modernization. Automation. Founder-Led Delivery.</em></p>
         </div>
         <div class="footer-links">
           <h4>Services</h4>
           <ul>
-            <li><a href="services.html">Consulting &amp; Advisory</a></li>
-            <li><a href="services-outsourcing.html">Project Execution</a></li>
-            <li><a href="talent.html">Talent Solutions</a></li>
-            <li><a href="industries.html">Industries</a></li>
+            <li><a href="services.html">Services</a></li>
+            <li><a href="assessment.html">Assessment</a></li>
+            <li><a href="services-outsourcing.html">Modernization Sprint</a></li>
+            <li><a href="talent.html">Contract Support</a></li>
           </ul>
         </div>
         <div class="footer-links">
           <h4>Company</h4>
           <ul>
             <li><a href="about.html">About</a></li>
-            <li><a href="contact.html">Contact</a></li>
+            <li><a href="trust.html">Trust Center</a></li>
             <li><a href="terms-privacy.html">Terms &amp; Privacy</a></li>
+            <li><a href="contact.html">Contact</a></li>
           </ul>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>&copy; 2026 Desir Solutions &middot; Maple Valley, Washington</span>
+        <span>&copy; 2026 Desir Solutions LLC &middot; Maple Valley, Washington</span>
         <span><a href="mailto:contact@desirsolutions.com">contact@desirsolutions.com</a></span>
       </div>
     </div>
@@ -153,6 +182,3 @@
   <script src="assets/app.js"></script>
 </body>
 </html>
-
-
-
