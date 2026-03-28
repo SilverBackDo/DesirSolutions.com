@@ -1,0 +1,63 @@
+name: Validate Repository
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate-site-and-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify public pages use launch posture
+        run: |
+          pages=(
+            index.html
+            services.html
+            assessment.html
+            services-outsourcing.html
+            talent.html
+            industries.html
+            about.html
+            contact.html
+            trust.html
+            terms-privacy.html
+          )
+          for page in "${pages[@]}"; do
+            test -f "$page"
+            ! grep -q "South Dakota" "$page"
+          done
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile backend for syntax validation
+        run: python -m compileall crm-project-Desir-Tech/backend/app
+
+  validate-terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Check Terraform formatting
+        run: |
+          terraform fmt -check platform/terraform/main.tf
+          terraform fmt -check platform/terraform/variables.tf
+          terraform fmt -check platform/terraform/outputs.tf
+          terraform fmt -check platform/terraform/versions.tf

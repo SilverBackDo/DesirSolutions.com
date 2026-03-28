@@ -33,12 +33,59 @@ on conflict (category_name) do update set
 
 insert into tax_obligations (tax_name, jurisdiction, frequency, rate_percent, account_reference, active)
 values
-  ('Washington B&O Tax', 'Washington State', 'quarterly', 1.500, null, true),
+  ('Washington B&O Tax', 'Washington State', 'quarterly', null, null, true),
   ('Federal Estimated Tax', 'United States', 'quarterly', null, null, true),
   ('Payroll Withholding', 'United States', 'monthly', null, null, true)
 on conflict (tax_name, jurisdiction) do update set
   frequency = excluded.frequency,
   rate_percent = excluded.rate_percent,
   active = excluded.active;
+
+update tax_obligations
+set active = false
+where tax_name = 'South Dakota Tax Registration Review'
+  and jurisdiction = 'South Dakota';
+
+insert into ai_workflows (
+  workflow_key,
+  name,
+  description,
+  objective,
+  version,
+  status,
+  autonomy_level,
+  primary_provider,
+  default_model,
+  requires_human_approval,
+  config
+)
+values (
+  'lead_qualification',
+  'Lead Qualification with Human Approval',
+  'Normalize inbound demand, score the lead, and require human approval before writing pipeline records.',
+  'Create an auditable, low-supervision path from inbound lead to approved CRM opportunity.',
+  1,
+  'active',
+  'human_approved',
+  'openai',
+  'gpt-5.4-mini',
+  true,
+  jsonb_build_object(
+    'agents', jsonb_build_array('intake_normalizer', 'qualification_agent', 'sales_supervisor_gate'),
+    'blocked_actions', jsonb_build_array('external_email.send', 'payment.execute', 'contract.release'),
+    'allowed_writes', jsonb_build_array('opportunities.create_after_approval')
+  )
+)
+on conflict (workflow_key) do update set
+  name = excluded.name,
+  description = excluded.description,
+  objective = excluded.objective,
+  version = excluded.version,
+  status = excluded.status,
+  autonomy_level = excluded.autonomy_level,
+  primary_provider = excluded.primary_provider,
+  default_model = excluded.default_model,
+  requires_human_approval = excluded.requires_human_approval,
+  config = excluded.config;
 
 commit;

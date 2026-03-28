@@ -1,119 +1,66 @@
-# Desirtech
+# Desir Solutions
 
-Desirtech is the canonical root for deployment and infrastructure.
-This root serves the static website and deploys the CRM backend using one Docker Compose stack.
+Public-facing repository for the Desir Solutions website, trust materials, and deployment assets.
 
-## Canonical Infrastructure (Root)
-- `.github/workflows/deploy.yml`
-- `docker-compose.yml`
-- `Dockerfile`
-- `nginx/default.conf`
-- `scripts/bootstrap-oci-vm.sh`
-- `scripts/backup-db.sh`
-- `scripts/apply-db-schema.sh`
+Desir Solutions LLC is a Washington-based, founder-led consulting business focused on:
 
-## CRM App Code (Kept)
-- `crm-project-Desir-Tech/backend`
-- `crm-project-Desir-Tech/frontend`
+- infrastructure modernization
+- Linux / RHEL and VMware cleanup
+- Terraform / Ansible automation
+- hybrid cloud and OCI hosting
+- scoped implementation sprints and fractional advisory work
 
-`crm-project-Desir-Tech` is app code only. Deploy and infra are managed from root `Desirtech`.
+The commercial entry point is the `Infrastructure Stability & Automation Assessment`, a fixed-fee 10-business-day offer that converts into a modernization sprint or monthly advisory engagement when appropriate.
 
-## Pages
-- `index.html`
-- `services.html`
-- `services-outsourcing.html`
-- `talent.html`
-- `industries.html`
-- `about.html`
-- `contact.html`
-- `terms-privacy.html`
+## What This Repo Contains
 
-## Local Run with Docker
-1. From `Desirtech`, copy env template:
-   - `cp .env.example .env`
-2. Set required values in `.env`:
-   - `SECRET_KEY`
-   - `DB_PASSWORD`
-   - `PGADMIN_DEFAULT_PASSWORD`
-   - `CRM_ADMIN_USERNAME`
-   - `CRM_ADMIN_PASSWORD`
-3. Start stack:
+- public marketing site under the repo root
+- trust and procurement support materials
+- deployment workflows and OCI hosting assets
+- internal CRM application code that powers contact intake and internal sales operations
+
+This repo is the canonical technical face of Desir Solutions. Internal business operations, finance, legal records, and private sales assets should remain in private repositories or secure company records.
+
+## Key Files
+
+- `index.html` - homepage
+- `services.html` - service overview
+- `assessment.html` - flagship paid offer
+- `contact.html` - inbound lead flow
+- `trust.html` - public trust center
+- `terms-privacy.html` - website terms and privacy notice
+- `.github/workflows/deploy.yml` - deployment workflow
+- `platform/terraform/` - OCI provisioning assets
+- `crm-project-Desir-Tech/backend/` - FastAPI backend
+- `crm-project-Desir-Tech/frontend/` - internal CRM frontend
+
+## Commercial Posture
+
+- legal entity: `Desir Solutions LLC`
+- operating posture: `Washington`
+- public location language: `Maple Valley, Washington`
+- public positioning: `founder-led consulting first, contract support second`
+
+## Local Run
+
+1. Copy `.env.example` to `.env`.
+2. Set the required secrets and database values.
+3. Start the stack:
    - `docker compose up -d --build`
-4. Apply canonical database schema and views (required once per database):
-   - `chmod +x scripts/apply-db-schema.sh`
+4. Apply the schema:
    - `./scripts/apply-db-schema.sh`
 5. Open:
-   - `https://localhost` (self-signed certificate on first run)
-   - `http://localhost` redirects to HTTPS
-6. Optional DB GUI (pgAdmin):
-   - `http://localhost:5050`
+   - `https://localhost`
+   - `https://localhost/crm/`
 
-### CRM Admin Password Generation
-Generate a strong shell-safe password:
+## Deployment
 
-- `docker compose exec -T backend python -c 'import secrets, string; chars = string.ascii_letters + string.digits + "-_"; print("CRM_ADMIN_PASSWORD=" + "".join(secrets.choice(chars) for _ in range(32)))'`
+- OCI VM hosting with Docker and reverse proxy
+- GitHub Actions deployment over SSH
+- production access should keep SSH restricted to approved admin access paths
 
-Then:
+## Trust Notes
 
-- put the value into root `.env` as `CRM_ADMIN_PASSWORD=...`
-- restart backend: `docker compose up -d backend`
-
-Note: `CRM_ADMIN_PASSWORD_HASH` exists in config, but current runtime dependency versions may not verify bcrypt hashes reliably. Use `CRM_ADMIN_PASSWORD` until bcrypt/passlib compatibility is pinned.
-
-### Non-SSL Local Profile (No Browser Cert Warning)
-Use this for local-only HTTP testing on `localhost`:
-
-- `docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build`
-- Open `http://localhost`
-
-### Dashboard Guardrail
-- Financial dashboard endpoints fail closed with `503` and code `FIN_DASHBOARD_NOT_INITIALIZED` until SQL views are present.
-- Required views: `vw_accounts_receivable`, `vw_monthly_cashflow`, `vw_tax_position`.
-
-## Data Access Connection Points
-- Public website:
-   - `https://www.desirsolutions.com`
-- API via reverse proxy:
-   - `https://www.desirsolutions.com/api/...`
-- Direct backend (local dev):
-   - `http://localhost:8000/api/...`
-   - `http://localhost:8000/health` (direct liveness)
-   - `POST http://localhost:8000/api/auth/login` (CRM user login)
-- PostgreSQL direct (internal container network):
-   - host: `db`
-   - port: `5432`
-   - database: `${DB_NAME}`
-   - user: `${DB_USER}`
-- PostgreSQL GUI (local only):
-   - pgAdmin URL: `http://localhost:5050`
-   - create a server with host `db`, port `5432`, DB/user from `.env`
-
-## Self-hosted Deployment Model
-- Nginx serves static frontend and reverse-proxies `/api/*` to FastAPI
-- PostgreSQL stays internal to Docker network
-- GitHub Actions deploys to Oracle VM over SSH
-- SSL is handled by certbot + nginx in the root stack
-
-## OCI Day-1 Bootstrap (New VM)
-1. SSH into Oracle VM and clone to `/opt/desir/Desirtech`.
-2. Run:
-   - `chmod +x scripts/bootstrap-oci-vm.sh`
-   - `REPO_URL=<repo> DOMAIN=desirsolutions.com EMAIL=contact@desirsolutions.com ./scripts/bootstrap-oci-vm.sh`
-
-## OCI Traefik Platform
-- Multi-site OCI deployment assets live under `platform/`.
-- This bundle provisions or reuses OCI network and compute resources, bootstraps Docker on the VM, and deploys a Traefik reverse proxy plus:
-  - `bellahburger.com`
-  - `desirsolutions.com`
-  - `alcines.com`
-- Start with platform/README.md.
-
-## GitHub Actions Deploy Prerequisites
-- Workflow file: `/.github/workflows/deploy.yml`
-- Required GitHub secrets:
-   - `OCI_VM_HOST`
-   - `OCI_VM_USER`
-   - `OCI_VM_SSH_KEY`
-- Trigger: Manual (`workflow_dispatch`)
-
-
+- the public site and trust package align to a Washington commercial posture
+- customer-facing commitments belong in executed agreements, not in README copy
+- internal automation remains supervised; client-facing approvals stay human-controlled
