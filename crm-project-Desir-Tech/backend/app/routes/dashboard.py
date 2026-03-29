@@ -11,7 +11,7 @@ from fastapi.responses import Response
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.auth import require_internal_access
+from app.auth import require_user_roles
 from app.database import get_db
 from app.schemas import (
     PipelineStageSummaryResponse,
@@ -22,7 +22,7 @@ from app.schemas import (
     DashboardKpisResponse,
 )
 
-router = APIRouter(dependencies=[Depends(require_internal_access)])
+router = APIRouter(dependencies=[Depends(require_user_roles("admin", "finance"))])
 
 _REQUIRED_FINANCIAL_VIEWS = (
     "vw_accounts_receivable",

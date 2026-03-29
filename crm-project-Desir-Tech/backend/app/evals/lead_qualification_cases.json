@@ -1,0 +1,87 @@
+[
+  {
+    "id": "enterprise_referral_high",
+    "lead": {
+      "source": "referral",
+      "contact_name": "Jordan Banks",
+      "contact_email": "jordan.banks@example.com",
+      "contact_phone": "555-0101",
+      "company_name": "Northstar Manufacturing",
+      "title": "VP Operations",
+      "estimated_deal_value": 180000,
+      "notes": "Referred by an existing client. Needs ERP integration support, revenue operations cleanup, and delivery leadership augmentation before an August rollout."
+    },
+    "expected_tier": "high",
+    "expected_stage": "qualified",
+    "expected_score_min": 90,
+    "expected_score_max": 90
+  },
+  {
+    "id": "partner_mid_market_medium",
+    "lead": {
+      "source": "partner",
+      "contact_name": "Alex Harper",
+      "contact_email": "alex.harper@example.com",
+      "contact_phone": null,
+      "company_name": "Brightwave Logistics",
+      "title": "COO",
+      "estimated_deal_value": 40000,
+      "notes": "Partner intro for process cleanup and fractional delivery oversight."
+    },
+    "expected_tier": "medium",
+    "expected_stage": "discovery",
+    "expected_score_min": 70,
+    "expected_score_max": 70
+  },
+  {
+    "id": "website_sparse_low",
+    "lead": {
+      "source": "website",
+      "contact_name": "Taylor Reed",
+      "contact_email": "taylor.reed@example.com",
+      "contact_phone": null,
+      "company_name": null,
+      "title": null,
+      "estimated_deal_value": null,
+      "notes": "Need help soon."
+    },
+    "expected_tier": "low",
+    "expected_stage": "new",
+    "expected_score_min": 25,
+    "expected_score_max": 25
+  },
+  {
+    "id": "manual_source_enterprise_high",
+    "lead": {
+      "source": "event",
+      "contact_name": "Morgan Lee",
+      "contact_email": "morgan.lee@example.com",
+      "contact_phone": null,
+      "company_name": "Atlas Retail Group",
+      "title": "Chief Transformation Officer",
+      "estimated_deal_value": 150000,
+      "notes": "Met at an industry event. Needs urgent operating-model redesign, vendor consolidation, and PMO support before fiscal planning."
+    },
+    "expected_tier": "high",
+    "expected_stage": "qualified",
+    "expected_score_min": 75,
+    "expected_score_max": 75
+  },
+  {
+    "id": "boundary_discovery_medium",
+    "lead": {
+      "source": "website",
+      "contact_name": "Chris Young",
+      "contact_email": null,
+      "contact_phone": "555-0102",
+      "company_name": "Signal Forge",
+      "title": null,
+      "estimated_deal_value": 50000,
+      "notes": "Needs help documenting delivery processes, defining role ownership, and stabilizing handoffs before hiring a larger team this quarter."
+    },
+    "expected_tier": "medium",
+    "expected_stage": "discovery",
+    "expected_score_min": 50,
+    "expected_score_max": 50
+  }
+]

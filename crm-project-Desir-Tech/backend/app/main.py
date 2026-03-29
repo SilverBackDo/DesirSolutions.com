@@ -11,8 +11,11 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.alerts import send_operations_alert_async
 from app.config import settings
 from app.routes import (
+    agent_blueprints,
+    ai_factory,
     auth as auth_routes,
     clients,
     contact,
@@ -24,6 +27,7 @@ from app.routes import (
     payments,
     pipeline,
 )
+from app.telemetry import configure_observability
 
 # ─── Logging ───
 logging.basicConfig(
@@ -41,6 +45,7 @@ app = FastAPI(
     docs_url="/docs" if settings.debug else None,
     redoc_url="/redoc" if settings.debug else None,
 )
+configure_observability(app)
 
 # ─── Global exception handler ───
 
@@ -53,6 +58,18 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
         request.url.path,
         traceback.format_exc(),
     )
+    if settings.operations_alert_notify_unhandled_exceptions:
+        await send_operations_alert_async(
+            "critical",
+            "Unhandled backend exception",
+            str(exc) or exc.__class__.__name__,
+            category="backend_exception",
+            source="fastapi",
+            details={
+                "method": request.method,
+                "path": request.url.path,
+            },
+        )
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"},
@@ -70,6 +87,8 @@ app.add_middleware(
 # ─── Routes ───
 app.include_router(health.router, tags=["Health"])
 app.include_router(auth_routes.router, prefix="/api/auth", tags=["Auth"])
+app.include_router(ai_factory.router, prefix="/api/ai-factory", tags=["AI Factory"])
+app.include_router(agent_blueprints.router, prefix="/api/agent-blueprints", tags=["Agent Blueprints"])
 app.include_router(clients.router, prefix="/api/clients", tags=["Clients"])
 app.include_router(contact.router, prefix="/api/contact", tags=["Contact"])
 app.include_router(leads.router, prefix="/api/leads", tags=["Leads"])
