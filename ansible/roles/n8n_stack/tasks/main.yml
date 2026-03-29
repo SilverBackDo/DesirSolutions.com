@@ -1,0 +1,78 @@
+---
+- name: Ensure n8n stack directories exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default('1000') }}"
+    group: "{{ item.group | default('1000') }}"
+    mode: "{{ item.mode | default('0750') }}"
+  loop:
+    - { path: "{{ n8n_stack_root }}", owner: "root", group: "root", mode: "0755" }
+    - { path: "{{ n8n_stack_root }}/config", owner: "root", group: "root", mode: "0750" }
+    - { path: "{{ n8n_stack_root }}/logs", owner: "1000", group: "1000", mode: "0750" }
+    - { path: "{{ n8n_stack_root }}/secrets", owner: "root", group: "root", mode: "0700" }
+    - { path: "{{ n8n_db_volume_path }}", owner: "999", group: "999", mode: "0700" }
+    - { path: "{{ n8n_data_volume_path }}", owner: "{{ n8n_user_uid }}", group: "{{ n8n_user_gid }}", mode: "0750" }
+
+- name: Render n8n environment file
+  ansible.builtin.template:
+    src: n8n.env.j2
+    dest: "{{ n8n_stack_root }}/config/n8n.env"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Render n8n compose file
+  ansible.builtin.template:
+    src: docker-compose.n8n.yml.j2
+    dest: "{{ n8n_stack_root }}/docker-compose.yml"
+    owner: root
+    group: root
+    mode: "0640"
+
+- name: Install backup script
+  ansible.builtin.template:
+    src: backup-n8n.sh.j2
+    dest: "{{ n8n_stack_root }}/backup-n8n.sh"
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Install restore script
+  ansible.builtin.template:
+    src: restore-n8n.sh.j2
+    dest: "{{ n8n_stack_root }}/restore-n8n.sh"
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Install healthcheck script
+  ansible.builtin.template:
+    src: healthcheck-n8n.sh.j2
+    dest: "{{ n8n_stack_root }}/healthcheck-n8n.sh"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install systemd unit
+  ansible.builtin.template:
+    src: desir-n8n.service.j2
+    dest: /etc/systemd/system/desir-n8n.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Validate n8n compose file
+  ansible.builtin.command:
+    cmd: docker compose --env-file {{ n8n_stack_root }}/config/n8n.env -f {{ n8n_stack_root }}/docker-compose.yml config
+  changed_when: false
+
+- name: Enable and start n8n stack
+  ansible.builtin.systemd:
+    name: desir-n8n.service
+    enabled: true
+    state: restarted

@@ -1,0 +1,8 @@
+---
+- name: Deploy n8n stack on existing OCI VM
+  hosts: n8n_hosts
+  gather_facts: true
+  roles:
+    - role: common
+    - role: docker_runtime
+    - role: n8n_stack

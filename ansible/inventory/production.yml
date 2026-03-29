@@ -1,0 +1,9 @@
+all:
+  children:
+    n8n_hosts:
+      hosts:
+        desir-oci-live:
+          ansible_host: 170.9.21.103
+          ansible_user: opc
+          ansible_ssh_private_key_file: C:/Users/DevLion/.ssh/id_ed25519_oracle
+          ansible_ssh_common_args: -o IdentitiesOnly=yes

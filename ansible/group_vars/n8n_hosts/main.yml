@@ -1,0 +1,78 @@
+n8n_stack_root: /opt/desir/n8n-stack
+n8n_project_name: desir-n8n
+n8n_domain: n8n.desirsolutions.com
+n8n_timezone: America/Los_Angeles
+n8n_user_uid: 1000
+n8n_user_gid: 1000
+n8n_postgres_db: n8n
+n8n_postgres_user: n8n
+n8n_postgres_port: 5432
+n8n_postgres_schema: public
+n8n_editor_base_url: "https://{{ n8n_domain }}/"
+n8n_webhook_url: "https://{{ n8n_domain }}/"
+n8n_path: /
+n8n_trust_proxy_hops: 1
+n8n_db_volume_path: "{{ n8n_stack_root }}/postgres"
+n8n_data_volume_path: "{{ n8n_stack_root }}/data"
+n8n_backup_root: /var/backups/desir/n8n
+n8n_backup_retention_days: 14
+n8n_image: docker.n8n.io/n8nio/n8n:stable
+n8n_postgres_image: postgres:16-alpine
+n8n_stack_network: platform_edge
+n8n_healthcheck_url: "https://{{ n8n_domain }}/healthz"
+desir_crm_base_url: https://desirsolutions.com
+desir_approval_digest_to: contact@desirsolutions.com
+n8n_secure_cookie: "true"
+n8n_diagnostics_enabled: "false"
+n8n_version_notifications_enabled: "false"
+n8n_templates_enabled: "false"
+n8n_metrics_enabled: "true"
+n8n_block_env_access_in_node: "true"
+n8n_block_file_access_to_n8n_files: "true"
+n8n_enforce_settings_file_permissions: "true"
+n8n_executions_data_prune: "true"
+n8n_executions_data_max_age: "336"
+n8n_executions_data_prune_max_count: "10000"
+n8n_executions_data_prune_hard_delete_interval: "15"
+n8n_executions_data_save_on_error: all
+n8n_executions_data_save_on_success: none
+n8n_executions_data_save_on_progress: "false"
+n8n_log_level: info
+n8n_workflow_timeout: "3600"
+n8n_workflow_timeout_max: "3600"
+n8n_stack_environment:
+  N8N_HOST: "{{ n8n_domain }}"
+  N8N_PROTOCOL: https
+  N8N_PORT: "5678"
+  N8N_EDITOR_BASE_URL: "{{ n8n_editor_base_url }}"
+  WEBHOOK_URL: "{{ n8n_webhook_url }}"
+  N8N_PROXY_HOPS: "{{ n8n_trust_proxy_hops }}"
+  N8N_PATH: "{{ n8n_path }}"
+  GENERIC_TIMEZONE: "{{ n8n_timezone }}"
+  TZ: "{{ n8n_timezone }}"
+  N8N_DIAGNOSTICS_ENABLED: "{{ n8n_diagnostics_enabled }}"
+  N8N_VERSION_NOTIFICATIONS_ENABLED: "{{ n8n_version_notifications_enabled }}"
+  N8N_TEMPLATES_ENABLED: "{{ n8n_templates_enabled }}"
+  N8N_METRICS: "{{ n8n_metrics_enabled }}"
+  N8N_BLOCK_ENV_ACCESS_IN_NODE: "{{ n8n_block_env_access_in_node }}"
+  N8N_BLOCK_FILE_ACCESS_TO_N8N_FILES: "{{ n8n_block_file_access_to_n8n_files }}"
+  N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "{{ n8n_enforce_settings_file_permissions }}"
+  EXECUTIONS_DATA_PRUNE: "{{ n8n_executions_data_prune }}"
+  EXECUTIONS_DATA_MAX_AGE: "{{ n8n_executions_data_max_age }}"
+  EXECUTIONS_DATA_PRUNE_MAX_COUNT: "{{ n8n_executions_data_prune_max_count }}"
+  EXECUTIONS_DATA_PRUNE_HARD_DELETE_INTERVAL: "{{ n8n_executions_data_prune_hard_delete_interval }}"
+  EXECUTIONS_DATA_SAVE_ON_ERROR: "{{ n8n_executions_data_save_on_error }}"
+  EXECUTIONS_DATA_SAVE_ON_SUCCESS: "{{ n8n_executions_data_save_on_success }}"
+  EXECUTIONS_DATA_SAVE_ON_PROGRESS: "{{ n8n_executions_data_save_on_progress }}"
+  EXECUTIONS_TIMEOUT: "{{ n8n_workflow_timeout }}"
+  EXECUTIONS_TIMEOUT_MAX: "{{ n8n_workflow_timeout_max }}"
+  N8N_DEFAULT_BINARY_DATA_MODE: filesystem
+  N8N_AVAILABLE_BINARY_DATA_MODES: filesystem
+  N8N_BINARY_DATA_STORAGE_PATH: /home/node/.n8n/binary-data
+  DB_TYPE: postgresdb
+  DB_POSTGRESDB_HOST: postgres
+  DB_POSTGRESDB_PORT: "{{ n8n_postgres_port }}"
+  DB_POSTGRESDB_DATABASE: "{{ n8n_postgres_db }}"
+  DB_POSTGRESDB_USER: "{{ n8n_postgres_user }}"
+  DB_POSTGRESDB_SCHEMA: "{{ n8n_postgres_schema }}"
+  N8N_LOG_LEVEL: "{{ n8n_log_level }}"

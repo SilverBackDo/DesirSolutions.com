@@ -1,0 +1,21 @@
+---
+- name: Install base host packages
+  ansible.builtin.package:
+    name:
+      - curl
+      - git
+      - jq
+      - python3
+      - python3-pip
+      - tar
+      - gzip
+      - openssl
+    state: present
+
+- name: Ensure backup root exists
+  ansible.builtin.file:
+    path: "{{ n8n_backup_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"

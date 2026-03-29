@@ -1,0 +1,78 @@
+name: desir-n8n
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    container_name: desir-n8n-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_POSTGRESDB_DATABASE}
+      POSTGRES_USER: ${DB_POSTGRESDB_USER}
+      POSTGRES_PASSWORD: ${DB_POSTGRESDB_PASSWORD}
+    volumes:
+      - ${POSTGRES_DATA_PATH:-./postgres}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_POSTGRESDB_USER} -d ${DB_POSTGRESDB_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - n8n_internal
+
+  n8n:
+    image: ${N8N_IMAGE:-docker.n8n.io/n8nio/n8n:stable}
+    container_name: desir-n8n
+    init: true
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    user: "1000:1000"
+    volumes:
+      - ${N8N_DATA_PATH:-./data}:/home/node/.n8n
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${STACK_NETWORK:-platform_edge}
+      - traefik.http.routers.n8n.rule=Host(`${N8N_DOMAIN}`)
+      - traefik.http.routers.n8n.entrypoints=websecure
+      - traefik.http.routers.n8n.tls.certresolver=letsencrypt
+      - traefik.http.routers.n8n.middlewares=n8n-security
+      - traefik.http.services.n8n.loadbalancer.server.port=5678
+      - traefik.http.middlewares.n8n-security.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.n8n-security.headers.browserXssFilter=true
+      - traefik.http.middlewares.n8n-security.headers.frameDeny=true
+      - traefik.http.middlewares.n8n-security.headers.forceSTSHeader=true
+      - traefik.http.middlewares.n8n-security.headers.stsSeconds=31536000
+      - traefik.http.middlewares.n8n-security.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.n8n-security.headers.stsPreload=true
+      - traefik.http.middlewares.n8n-security.headers.referrerPolicy=strict-origin-when-cross-origin
+      - traefik.http.middlewares.n8n-security.headers.permissionsPolicy=accelerometer=(),camera=(),geolocation=(),microphone=(),payment=(),usb=()
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - n8n_internal
+      - edge
+
+networks:
+  n8n_internal:
+    driver: bridge
+  edge:
+    external: true
+    name: ${STACK_NETWORK:-platform_edge}
