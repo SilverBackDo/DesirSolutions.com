@@ -12,7 +12,7 @@ export function ContactPage() {
         path="/contact"
       />
 
-      <main className="shell py-14 lg:py-20">
+      <main id="main-content" className="shell py-14 lg:py-20">
         <section className="grid gap-8 lg:grid-cols-[0.88fr_1.12fr]">
           <div className="space-y-6">
             <SectionIntro
@@ -27,6 +27,7 @@ export function ContactPage() {
                 <li>Desir Solutions reviews the request within one business day.</li>
                 <li>If the fit is strong, the next step is a short discovery call.</li>
                 <li>The first commercial step is the assessment, not a vague discovery cycle.</li>
+                <li>The intake can route to the CRM API or fall back to direct email if needed.</li>
               </ul>
             </div>
 

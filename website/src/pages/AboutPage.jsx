@@ -1,3 +1,4 @@
+import { ClosingCta } from '../components/ClosingCta'
 import { SectionIntro } from '../components/SectionIntro'
 import { Seo } from '../components/Seo'
 import { company, founderProof } from '../data/siteContent'
@@ -17,7 +18,7 @@ export function AboutPage() {
         path="/about"
       />
 
-      <main className="shell py-14 lg:py-20">
+      <main id="main-content" className="shell py-14 lg:py-20">
         <section className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div className="space-y-5">
             <span className="eyebrow">Founder-led by design</span>
@@ -75,6 +76,8 @@ export function AboutPage() {
             </ul>
           </div>
         </section>
+
+        <ClosingCta eyebrow="Work with the founder" />
       </main>
     </>
   )

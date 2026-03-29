@@ -15,6 +15,9 @@ export function Layout() {
 
   return (
     <div className="relative">
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
       <header className="sticky top-0 z-40 border-b border-white/60 bg-sand-50/90 backdrop-blur-xl">
         <div className="shell flex items-center justify-between py-4">
           <div className="flex items-center gap-3">
@@ -22,7 +25,11 @@ export function Layout() {
               DS
             </div>
             <div>
-              <NavLink className="font-display text-lg font-semibold text-brand-950" to="/">
+              <NavLink
+                className="font-display text-lg font-semibold text-brand-950"
+                onClick={() => setMenuOpen(false)}
+                to="/"
+              >
                 {company.name}
               </NavLink>
               <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
@@ -32,6 +39,8 @@ export function Layout() {
           </div>
 
           <button
+            aria-controls="mobile-primary-navigation"
+            aria-expanded={menuOpen}
             aria-label="Toggle navigation"
             className="inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 lg:hidden"
             onClick={() => setMenuOpen((current) => !current)}
@@ -41,7 +50,10 @@ export function Layout() {
           </button>
 
           <div className="hidden items-center gap-2 lg:flex">
-            <nav className="flex items-center gap-1 rounded-full border border-white/80 bg-white/60 p-1 shadow-sm">
+            <nav
+              aria-label="Primary"
+              className="flex items-center gap-1 rounded-full border border-white/80 bg-white/60 p-1 shadow-sm"
+            >
               {navItems.map((item) => (
                 <NavLink key={item.to} className={navClasses} to={item.to}>
                   {item.label}
@@ -55,11 +67,17 @@ export function Layout() {
         {menuOpen ? (
           <div className="shell pb-4 lg:hidden">
             <div className="panel space-y-3 p-4">
-              <nav className="flex flex-col gap-2">
+              <nav
+                aria-label="Mobile primary"
+                className="flex flex-col gap-2"
+                id="mobile-primary-navigation"
+              >
                 {navItems.map((item) => (
                   <NavLink
                     key={item.to}
-                    className={navClasses}
+                    className={({ isActive }) =>
+                      `${navClasses({ isActive })} text-left`
+                    }
                     onClick={() => setMenuOpen(false)}
                     to={item.to}
                   >
@@ -67,7 +85,7 @@ export function Layout() {
                   </NavLink>
                 ))}
               </nav>
-              <Button className="w-full" to="/contact">
+              <Button className="w-full" onClick={() => setMenuOpen(false)} to="/contact">
                 Request the Assessment
               </Button>
             </div>

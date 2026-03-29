@@ -23,6 +23,10 @@
     scroll-behavior: smooth;
   }
 
+  html:focus-within {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply m-0 min-h-screen bg-sand-50 font-sans text-slate-900 antialiased;
     background-image:
@@ -45,6 +49,11 @@
   select,
   textarea {
     font: inherit;
+  }
+
+  :focus-visible {
+    outline: 3px solid rgba(35, 82, 103, 0.35);
+    outline-offset: 2px;
   }
 }
 
@@ -80,6 +89,19 @@
   .prose-list {
     @apply m-0 space-y-3 p-0 text-slate-600;
     list-style: none;
+  }
+
+  .field-error {
+    @apply block text-xs leading-6 font-medium text-red-700;
+  }
+
+  .skip-link {
+    @apply absolute left-4 top-4 z-50 rounded-full bg-brand-950 px-4 py-2 text-sm font-semibold text-white;
+    transform: translateY(-160%);
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
   }
 }
 

@@ -1,3 +1,4 @@
+import { ClosingCta } from '../components/ClosingCta'
 import { SectionIntro } from '../components/SectionIntro'
 import { Seo } from '../components/Seo'
 import { trustControls } from '../data/siteContent'
@@ -17,7 +18,7 @@ export function TrustPage() {
         path="/trust"
       />
 
-      <main className="shell py-14 lg:py-20">
+      <main id="main-content" className="shell py-14 lg:py-20">
         <SectionIntro
           eyebrow="Trust center"
           title="Lean controls designed for a consulting firm, not a software platform fantasy."
@@ -54,6 +55,8 @@ export function TrustPage() {
             </ul>
           </article>
         </section>
+
+        <ClosingCta eyebrow="Ready to engage" />
       </main>
     </>
   )

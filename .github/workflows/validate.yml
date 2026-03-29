@@ -7,47 +7,37 @@ on:
       - main
 
 jobs:
-  validate-site-and-backend:
+  validate-website:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verify public pages use launch posture
-        run: |
-          pages=(
-            index.html
-            services.html
-            assessment.html
-            services-outsourcing.html
-            talent.html
-            industries.html
-            about.html
-            contact.html
-            trust.html
-            terms-privacy.html
-          )
-          for page in "${pages[@]}"; do
-            test -f "$page"
-            ! grep -q "South Dakota" "$page"
-          done
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
 
-      - name: Compile backend for syntax validation
-        run: python -m compileall crm-project-Desir-Tech/backend/app
+      - name: Verify launch posture strings
+        run: |
+          ! grep -R "South Dakota" website/src website/README.md README.md
+
+      - name: Install website dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Lint website
+        working-directory: website
+        run: npm run lint
+
+      - name: Build website
+        working-directory: website
+        run: npm run build
 
   validate-terraform:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,8 +46,16 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Check Terraform formatting
+        run: terraform fmt -check -recursive infrastructure/terraform
+
+      - name: Terraform init and validate dev
+        working-directory: infrastructure/terraform/environments/dev
         run: |
-          terraform fmt -check platform/terraform/main.tf
-          terraform fmt -check platform/terraform/variables.tf
-          terraform fmt -check platform/terraform/outputs.tf
-          terraform fmt -check platform/terraform/versions.tf
+          terraform init -backend=false
+          terraform validate
+
+      - name: Terraform init and validate prod
+        working-directory: infrastructure/terraform/environments/prod
+        run: |
+          terraform init -backend=false
+          terraform validate

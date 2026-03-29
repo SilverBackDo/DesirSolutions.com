@@ -1,3 +1,4 @@
+import { ClosingCta } from '../components/ClosingCta'
 import { SectionIntro } from '../components/SectionIntro'
 import { Seo } from '../components/Seo'
 import { services } from '../data/siteContent'
@@ -26,7 +27,7 @@ export function ServicesPage() {
         path="/services"
       />
 
-      <main className="shell py-14 lg:py-20">
+      <main id="main-content" className="shell py-14 lg:py-20">
         <SectionIntro
           eyebrow="Three service lines"
           title="Structured for a founder-led consulting business, not a bloated service catalog."
@@ -68,6 +69,8 @@ export function ServicesPage() {
             ))}
           </div>
         </section>
+
+        <ClosingCta eyebrow="Buying path" />
       </main>
     </>
   )

@@ -1,106 +1,55 @@
-name: Deploy Desir Solutions stack
+name: Deploy Desir Solutions website
 
 on:
-    workflow_dispatch:
-        inputs:
-            git_ref:
-                description: Git ref to deploy
-                required: true
-                default: main
-                type: string
-            deploy_production:
-                description: Promote to production after staging passes
-                required: true
-                default: false
-                type: boolean
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: Git ref to deploy
+        required: true
+        default: main
+        type: string
+  push:
+    branches:
+      - main
+    paths:
+      - 'website/**'
+      - '.github/workflows/deploy.yml'
 
 jobs:
-    deploy-staging:
-        runs-on: ubuntu-latest
-        environment: staging
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      APP_DIR: /opt/desir/DesirSolutions.com
+      DESIR_WEBSITE_PORT: ${{ vars.OCI_WEBSITE_PORT || '80' }}
+      GIT_REF: ${{ github.event.inputs.git_ref || 'main' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Deploy staging stack to Oracle VM via SSH
-              uses: appleboy/ssh-action@v1.2.2
-              env:
-                  GIT_REF: ${{ inputs.git_ref }}
-                  STACK_ENV_B64: ${{ secrets.STAGING_ENV_FILE_B64 }}
-              with:
-                  host: ${{ secrets.OCI_STAGING_VM_HOST != '' && secrets.OCI_STAGING_VM_HOST || secrets.OCI_VM_HOST }}
-                  username: ${{ secrets.OCI_STAGING_VM_USER != '' && secrets.OCI_STAGING_VM_USER || secrets.OCI_VM_USER }}
-                  key: ${{ secrets.OCI_STAGING_VM_SSH_KEY != '' && secrets.OCI_STAGING_VM_SSH_KEY || secrets.OCI_VM_SSH_KEY }}
-                  envs: GIT_REF,STACK_ENV_B64
-                  script: |
-                      set -euo pipefail
-                      cd /opt/desir/Desirtech
-                      git fetch --all --prune
-                      git checkout "$GIT_REF"
-                      if git rev-parse --verify "origin/$GIT_REF" >/dev/null 2>&1; then
-                        git pull --ff-only origin "$GIT_REF"
-                      fi
-                      chmod +x scripts/deploy-stack.sh scripts/apply-db-schema.sh scripts/launch-readiness.sh scripts/run-lead-qualification-evals.sh
-                      STACK_ENV_FILE=.env.staging \
-                      STACK_PROJECT_NAME=desir-staging \
-                      STACK_COMPOSE_FILES="docker-compose.staging.yml" \
-                      STACK_DB_CONTAINER=desir-staging-db \
-                      STACK_ENV_B64="$STACK_ENV_B64" \
-                      STACK_TLS_DOMAIN=staging.desirsolutions.com \
-                      STACK_CERTBOT_ROOT=certbot-staging/conf \
-                      STACK_ACME_WEBROOT=certbot-staging/www \
-                      STACK_TELEMETRY_DIR=telemetry/staging-output \
-                      STACK_READINESS_PUBLIC_BASE_URL=https://127.0.0.1:8443 \
-                      STACK_READINESS_BACKEND_BASE_URL=http://127.0.0.1:18000 \
-                      STACK_CURL_INSECURE=true \
-                      STACK_RUN_EVALS=true \
-                      STACK_RUN_READINESS=true \
-                      STACK_READINESS_DECISION=reject \
-                      STACK_DOCKER_IMAGE_PRUNE=true \
-                      ./scripts/deploy-stack.sh
+      - name: Deploy website to OCI VM via SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.OCI_VM_HOST }}
+          username: ${{ secrets.OCI_VM_USER }}
+          key: ${{ secrets.OCI_VM_SSH_KEY }}
+          envs: APP_DIR,DESIR_WEBSITE_PORT,GIT_REF
+          script: |
+            set -euo pipefail
+            if [ ! -d "$APP_DIR/.git" ]; then
+              mkdir -p "$(dirname "$APP_DIR")"
+              git clone --branch main https://github.com/${{ github.repository }}.git "$APP_DIR"
+            fi
 
-    deploy-production:
-        if: ${{ inputs.deploy_production }}
-        needs:
-            - deploy-staging
-        runs-on: ubuntu-latest
-        environment: production
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+            cd "$APP_DIR"
+            git fetch --all --prune
+            git checkout "$GIT_REF"
+            if git rev-parse --verify "origin/$GIT_REF" >/dev/null 2>&1; then
+              git reset --hard "origin/$GIT_REF"
+            fi
 
-            - name: Deploy production stack to Oracle VM via SSH
-              uses: appleboy/ssh-action@v1.2.2
-              env:
-                  GIT_REF: ${{ inputs.git_ref }}
-                  STACK_ENV_B64: ${{ secrets.PRODUCTION_ENV_FILE_B64 }}
-              with:
-                  host: ${{ secrets.OCI_VM_HOST }}
-                  username: ${{ secrets.OCI_VM_USER }}
-                  key: ${{ secrets.OCI_VM_SSH_KEY }}
-                  envs: GIT_REF,STACK_ENV_B64
-                  script: |
-                      set -euo pipefail
-                      cd /opt/desir/Desirtech
-                      git fetch --all --prune
-                      git checkout "$GIT_REF"
-                      if git rev-parse --verify "origin/$GIT_REF" >/dev/null 2>&1; then
-                        git pull --ff-only origin "$GIT_REF"
-                      fi
-                      chmod +x scripts/deploy-stack.sh scripts/apply-db-schema.sh scripts/launch-readiness.sh scripts/run-lead-qualification-evals.sh
-                      STACK_ENV_FILE=.env \
-                      STACK_COMPOSE_FILES="docker-compose.yml" \
-                      STACK_DB_CONTAINER=desir-db \
-                      STACK_ENV_B64="$STACK_ENV_B64" \
-                      STACK_TLS_DOMAIN=desirsolutions.com \
-                      STACK_CERTBOT_ROOT=certbot/conf \
-                      STACK_ACME_WEBROOT=certbot/www \
-                      STACK_TELEMETRY_DIR=telemetry/output \
-                      STACK_READINESS_PUBLIC_BASE_URL=https://127.0.0.1 \
-                      STACK_READINESS_BACKEND_BASE_URL=http://127.0.0.1:8000 \
-                      STACK_CURL_INSECURE=true \
-                      STACK_RUN_EVALS=true \
-                      STACK_RUN_READINESS=false \
-                      STACK_READINESS_DECISION=reject \
-                      STACK_DOCKER_IMAGE_PRUNE=true \
-                      ./scripts/deploy-stack.sh
+            cd website
+            docker compose config >/dev/null
+            docker compose up -d --build
+            docker compose ps
+            curl -fsS "http://127.0.0.1:${DESIR_WEBSITE_PORT}/healthz"
