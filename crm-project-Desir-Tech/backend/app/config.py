@@ -7,7 +7,7 @@ from decimal import Decimal
 from urllib.parse import urlsplit, urlunsplit
 
 from pydantic import BaseModel, Field, model_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 CRM_USER_ROLES = {"admin", "sales", "finance", "approver", "viewer"}
 ALERT_SEVERITIES = {"info", "low", "medium", "high", "critical"}
@@ -38,6 +38,8 @@ class AIModelPricing(BaseModel):
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
     # Database
     db_host: str = "db"
     db_port: int = 5432
@@ -194,9 +196,5 @@ class Settings(BaseSettings):
         elif not path.endswith("/v1/traces"):
             path = f"{path}/v1/traces"
         return urlunsplit((parsed.scheme, netloc, path, "", ""))
-
-    class Config:
-        env_file = ".env"
-
 
 settings = Settings()
