@@ -30,6 +30,8 @@ Expected results:
 - `docker compose config` exits `0`
 - `/healthz` returns `HTTP/1.1 200 OK`
 - `docker compose ps` shows the container as `healthy`
+- `docker compose -f docker-compose.deploy.yml config` exits `0`
+- `docker compose -f docker-compose.prod.yml config` exits `0`
 
 Stop the local runtime:
 
@@ -54,9 +56,23 @@ This provisions:
 - public subnet
 - internet gateway
 - NSG with `80/443` public and `22` restricted to approved CIDRs
-- Oracle Linux 9 VM on `VM.Standard.A1.Flex`
+- Oracle Linux 9 VM on the configured production shape
 
-## 3. First HTTP bootstrap on the VM
+## 3. Image publishing and first HTTP bootstrap on the VM
+
+The production VM does not build the website locally. GitHub Actions builds and publishes the website image to GHCR, and the VM pulls that image for deployment.
+
+Configure these repository secrets before the first deployment:
+
+- `OCI_VM_HOST`
+- `OCI_VM_USER`
+- `OCI_VM_SSH_KEY`
+
+Optional repository variable:
+
+- `OCI_WEBSITE_PORT`
+
+Run the `Deploy Desir Solutions website` workflow after the target commit lands on `main`.
 
 After `terraform apply`, connect with the Terraform output:
 
@@ -64,7 +80,7 @@ After `terraform apply`, connect with the Terraform output:
 ssh opc@PUBLIC_IP
 ```
 
-The cloud-init bootstrap deploys the website with Docker on port `80`.
+The cloud-init bootstrap pulls the published website image and runs the HTTP compose file on port `80`.
 
 Validate:
 
@@ -151,17 +167,7 @@ Do not launch the public form while assuming `/api/contact` exists if it is not 
 
 ## 8. GitHub Actions
 
-Configure these repository secrets:
-
-- `OCI_VM_HOST`
-- `OCI_VM_USER`
-- `OCI_VM_SSH_KEY`
-
-Optional repository variable:
-
-- `OCI_WEBSITE_PORT`
-
-The deployment workflow updates the checkout under `/opt/desir/DesirSolutions.com`, rebuilds the container, and verifies `/healthz`.
+The deployment workflow builds the website image, pushes it to GHCR, updates the checkout under `/opt/desir/DesirSolutions.com`, chooses `docker-compose.deploy.yml` before TLS or `docker-compose.prod.yml` after TLS, and waits for the container health check to turn healthy.
 
 ## 9. Rollback
 
@@ -172,7 +178,8 @@ cd /opt/desir/DesirSolutions.com
 git log --oneline -5
 git checkout PREVIOUS_COMMIT
 cd website
-docker compose -f docker-compose.prod.yml up -d --build
+export DESIR_WEBSITE_IMAGE=ghcr.io/silverbackdo/desirsolutions-website:PREVIOUS_IMAGE_TAG
+docker compose -f docker-compose.deploy.yml up -d
 ```
 
 Then re-run:

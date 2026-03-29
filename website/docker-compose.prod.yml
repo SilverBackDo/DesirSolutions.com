@@ -1,8 +1,7 @@
 services:
   website:
-    build:
-      context: .
-    image: desirsolutions-website:latest
+    image: "${DESIR_WEBSITE_IMAGE:-ghcr.io/silverbackdo/desirsolutions-website:latest}"
+    pull_policy: always
     container_name: desirsolutions-website
     init: true
     restart: unless-stopped

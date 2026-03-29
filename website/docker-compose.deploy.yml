@@ -1,0 +1,21 @@
+services:
+  website:
+    image: "${DESIR_WEBSITE_IMAGE:-ghcr.io/silverbackdo/desirsolutions-website:latest}"
+    pull_policy: always
+    container_name: desirsolutions-website
+    init: true
+    restart: unless-stopped
+    ports:
+      - "${DESIR_WEBSITE_PORT:-80}:80"
+    volumes:
+      - ./certbot/www:/var/www/certbot
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -36,6 +36,20 @@ jobs:
         working-directory: website
         run: npm run build
 
+      - name: Validate deploy compose file
+        working-directory: website
+        env:
+          DESIR_WEBSITE_IMAGE: ghcr.io/silverbackdo/desirsolutions-website:latest
+          DESIR_WEBSITE_PORT: 8080
+        run: docker compose -f docker-compose.deploy.yml config
+
+      - name: Validate production compose file
+        working-directory: website
+        env:
+          DESIR_WEBSITE_IMAGE: ghcr.io/silverbackdo/desirsolutions-website:latest
+          DESIR_WEBSITE_PORT: 8080
+        run: docker compose -f docker-compose.prod.yml config
+
   validate-terraform:
     runs-on: ubuntu-latest
     steps:
