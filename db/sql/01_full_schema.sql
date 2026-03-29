@@ -17,7 +17,7 @@ BEGIN
     CREATE TYPE party_status AS ENUM ('prospect','active','inactive','suspended');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'lead_source') THEN
-    CREATE TYPE lead_source AS ENUM ('website','referral','linkedin','email','event','partner','outbound','other');
+    CREATE TYPE lead_source AS ENUM ('website','referral','linkedin','email','event','partner','outbound','other','readiness_smoke');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'opportunity_stage') THEN
     CREATE TYPE opportunity_stage AS ENUM ('new','qualified','discovery','proposal','negotiation','won','lost','on_hold');
@@ -39,6 +39,60 @@ BEGIN
   END IF;
 END$$;
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_enum
+    WHERE enumtypid = 'lead_source'::regtype
+      AND enumlabel = 'readiness_smoke'
+  ) THEN
+    ALTER TYPE lead_source ADD VALUE 'readiness_smoke';
+  END IF;
+END$$;
+
+create table if not exists clients (
+  id bigserial primary key,
+  name varchar(255) not null,
+  email varchar(255) not null unique,
+  phone varchar(50),
+  company varchar(255),
+  notes text,
+  status party_status not null default 'prospect',
+  website varchar(255),
+  industry varchar(120),
+  billing_email varchar(255),
+  legal_name varchar(255),
+  tax_id varchar(120),
+  payment_terms_days integer default 30,
+  city varchar(120),
+  state varchar(120),
+  country varchar(120),
+  source lead_source default 'website',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists contact_submissions (
+  id bigserial primary key,
+  name varchar(255) not null,
+  email varchar(255) not null,
+  company varchar(255),
+  role varchar(255),
+  environment varchar(50),
+  timeline varchar(255),
+  message text,
+  website varchar(255),
+  converted_to_lead boolean default false,
+  converted_at timestamptz,
+  utm_source varchar(120),
+  utm_medium varchar(120),
+  utm_campaign varchar(120),
+  ip_address varchar(64),
+  user_agent varchar(512),
+  created_at timestamptz not null default now()
+);
+
 -- Preserve and expand existing clients table
 alter table if exists clients
   add column if not exists status party_status default 'prospect',
@@ -55,11 +109,14 @@ alter table if exists clients
 
 -- Preserve and expand existing contact_submissions table
 alter table if exists contact_submissions
+  add column if not exists website varchar(255),
   add column if not exists converted_to_lead boolean default false,
   add column if not exists converted_at timestamptz,
   add column if not exists utm_source varchar(120),
   add column if not exists utm_medium varchar(120),
-  add column if not exists utm_campaign varchar(120);
+  add column if not exists utm_campaign varchar(120),
+  add column if not exists ip_address varchar(64),
+  add column if not exists user_agent varchar(512);
 
 create table if not exists employees (
   id bigserial primary key,
@@ -416,6 +473,132 @@ create table if not exists documents (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists ai_workflows (
+  id bigserial primary key,
+  workflow_key varchar(120) not null unique,
+  name varchar(255) not null,
+  description text not null,
+  objective text not null,
+  version integer not null default 1,
+  status varchar(40) not null default 'active',
+  autonomy_level varchar(40) not null default 'copilot',
+  primary_provider varchar(40) not null default 'openai',
+  default_model varchar(120),
+  requires_human_approval boolean not null default true,
+  config jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists ai_runs (
+  id bigserial primary key,
+  workflow_id bigint not null references ai_workflows(id) on delete cascade,
+  lead_id bigint references leads(id) on delete set null,
+  opportunity_id bigint references opportunities(id) on delete set null,
+  status varchar(40) not null default 'queued',
+  approval_status varchar(40) not null default 'pending',
+  requested_by varchar(120) not null default 'system',
+  provider varchar(40) not null default 'openai',
+  model varchar(120),
+  execution_mode varchar(40) not null default 'deterministic',
+  requires_human_approval boolean not null default true,
+  risk_summary text,
+  input_payload jsonb not null default '{}'::jsonb,
+  output_payload jsonb not null default '{}'::jsonb,
+  started_at timestamptz,
+  completed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists ai_tasks (
+  id bigserial primary key,
+  run_id bigint not null references ai_runs(id) on delete cascade,
+  sequence_no integer not null,
+  agent_key varchar(120) not null,
+  agent_name varchar(255) not null,
+  status varchar(40) not null default 'pending',
+  input_payload jsonb not null default '{}'::jsonb,
+  output_payload jsonb not null default '{}'::jsonb,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(run_id, sequence_no)
+);
+
+create table if not exists ai_approvals (
+  id bigserial primary key,
+  run_id bigint not null references ai_runs(id) on delete cascade,
+  approval_type varchar(80) not null,
+  status varchar(40) not null default 'pending',
+  requested_from varchar(120) not null default 'human_supervisor',
+  requested_reason text not null,
+  decided_by varchar(120),
+  decided_at timestamptz,
+  decision_notes text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists ai_tool_calls (
+  id bigserial primary key,
+  run_id bigint not null references ai_runs(id) on delete cascade,
+  task_id bigint references ai_tasks(id) on delete set null,
+  tool_name varchar(120) not null,
+  tool_target varchar(120),
+  status varchar(40) not null default 'pending',
+  request_payload jsonb not null default '{}'::jsonb,
+  response_payload jsonb not null default '{}'::jsonb,
+  latency_ms integer,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists ai_memories (
+  id bigserial primary key,
+  workflow_id bigint not null references ai_workflows(id) on delete cascade,
+  memory_key varchar(160) not null,
+  scope varchar(60) not null default 'workflow',
+  content jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(workflow_id, memory_key)
+);
+
+create table if not exists ai_cost_ledger (
+  id bigserial primary key,
+  run_id bigint not null references ai_runs(id) on delete cascade,
+  provider varchar(40) not null,
+  model varchar(120),
+  prompt_tokens integer not null default 0,
+  completion_tokens integer not null default 0,
+  total_tokens integer not null default 0,
+  estimated_cost_usd numeric(12,6) not null default 0,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists ai_eval_results (
+  id bigserial primary key,
+  workflow_id bigint not null references ai_workflows(id) on delete cascade,
+  run_id bigint references ai_runs(id) on delete set null,
+  eval_name varchar(120) not null,
+  status varchar(40) not null default 'pending',
+  score numeric(8,3),
+  findings jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists ai_incidents (
+  id bigserial primary key,
+  run_id bigint references ai_runs(id) on delete set null,
+  severity varchar(40) not null default 'medium',
+  incident_type varchar(120) not null,
+  description text not null,
+  status varchar(40) not null default 'open',
+  owner varchar(120),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- Indexes
 create index if not exists idx_clients_status on clients(status);
 create index if not exists idx_clients_source on clients(source);
@@ -430,6 +613,13 @@ create index if not exists idx_incoming_payments_date on incoming_payments(payme
 create index if not exists idx_expenses_date on expenses(expense_date);
 create index if not exists idx_tax_payments_due_date on tax_payments(due_date);
 create index if not exists idx_marketing_campaigns_channel on marketing_campaigns(channel);
+create index if not exists idx_ai_workflows_status on ai_workflows(status);
+create index if not exists idx_ai_runs_workflow_status on ai_runs(workflow_id, status);
+create index if not exists idx_ai_runs_lead on ai_runs(lead_id);
+create index if not exists idx_ai_tasks_run_status on ai_tasks(run_id, status);
+create index if not exists idx_ai_approvals_run_status on ai_approvals(run_id, status);
+create index if not exists idx_ai_tool_calls_run on ai_tool_calls(run_id);
+create index if not exists idx_ai_cost_ledger_run on ai_cost_ledger(run_id);
 
 -- Updated_at triggers
 DO $$
@@ -439,7 +629,8 @@ BEGIN
   FOREACH t IN ARRAY ARRAY[
     'clients','employees','contractors','leads','opportunities','proposals',
     'contracts','projects','project_assignments','time_entries','invoices',
-    'tax_obligations','tax_payments','expenses','marketing_campaigns','documents'
+    'tax_obligations','tax_payments','expenses','marketing_campaigns','documents',
+    'ai_workflows','ai_runs','ai_tasks','ai_memories','ai_incidents'
   ]
   LOOP
     EXECUTE format('DROP TRIGGER IF EXISTS tr_%I_updated_at ON %I;', t, t);

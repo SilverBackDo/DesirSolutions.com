@@ -6,12 +6,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.auth import require_internal_access
+from app.auth import require_user_roles
 from app.database import get_db
 from app.models import Invoice
 from app.schemas import InvoiceCreate, InvoiceResponse, InvoiceUpdate
 
-router = APIRouter(dependencies=[Depends(require_internal_access)])
+router = APIRouter(dependencies=[Depends(require_user_roles("admin", "finance"))])
 
 
 @router.get("/", response_model=list[InvoiceResponse])
