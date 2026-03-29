@@ -1,66 +1,64 @@
 # Desir Solutions
 
-Public-facing repository for the Desir Solutions website, trust materials, and deployment assets.
+Public repository for the Desir Solutions marketing site, trust materials, and OCI deployment assets.
 
 Desir Solutions LLC is a Washington-based, founder-led consulting business focused on:
 
-- infrastructure modernization
-- Linux / RHEL and VMware cleanup
-- Terraform / Ansible automation
-- hybrid cloud and OCI hosting
-- scoped implementation sprints and fractional advisory work
+- infrastructure assessments
+- Terraform, Ansible, and CI/CD implementation
+- Linux / RHEL, VMware, and hybrid-cloud modernization
+- fractional infrastructure leadership for lean IT teams
 
-The commercial entry point is the `Infrastructure Stability & Automation Assessment`, a fixed-fee 10-business-day offer that converts into a modernization sprint or monthly advisory engagement when appropriate.
+The current launch path is the fixed-fee `Infrastructure Stability & Automation Assessment`.
 
-## What This Repo Contains
+## Current launch source of truth
 
-- public marketing site under the repo root
-- trust and procurement support materials
-- deployment workflows and OCI hosting assets
-- internal CRM application code that powers contact intake and internal sales operations
+Use these paths for the active launch system:
 
-This repo is the canonical technical face of Desir Solutions. Internal business operations, finance, legal records, and private sales assets should remain in private repositories or secure company records.
+- `website/` - React + Vite production site
+- `website/nginx/` - container runtime and TLS configs
+- `infrastructure/terraform/` - OCI VM deployment stack
+- `.github/workflows/validate.yml` - website and Terraform validation
+- `.github/workflows/deploy.yml` - website deployment workflow
 
-## Key Files
+## Repository posture
 
-- `index.html` - homepage
-- `services.html` - service overview
-- `assessment.html` - flagship paid offer
-- `contact.html` - inbound lead flow
-- `trust.html` - public trust center
-- `terms-privacy.html` - website terms and privacy notice
-- `.github/workflows/deploy.yml` - deployment workflow
-- `platform/terraform/` - OCI provisioning assets
-- `crm-project-Desir-Tech/backend/` - FastAPI backend
-- `crm-project-Desir-Tech/frontend/` - internal CRM frontend
+- `website/` is the day-one public site
+- `infrastructure/terraform/` is the day-one OCI host path
+- root-level static HTML and older platform assets are legacy material and are not the primary launch deployment source
+- internal business operations, finance, contracts, and sales records belong in the private business repository
 
-## Commercial Posture
+## Commercial identity
 
 - legal entity: `Desir Solutions LLC`
-- operating posture: `Washington`
+- legal posture: `Washington limited liability company`
 - public location language: `Maple Valley, Washington`
-- public positioning: `founder-led consulting first, contract support second`
+- sales model: `founder-led consulting first, implementation second, advisory third`
 
-## Local Run
+## Local validation
 
-1. Copy `.env.example` to `.env`.
-2. Set the required secrets and database values.
-3. Start the stack:
-   - `docker compose up -d --build`
-4. Apply the schema:
-   - `./scripts/apply-db-schema.sh`
-5. Open:
-   - `https://localhost`
-   - `https://localhost/crm/`
+```bash
+cd website
+npm ci
+npm run lint
+npm run build
+docker compose config
+```
 
-## Deployment
+## Deployment model
 
-- OCI VM hosting with Docker and reverse proxy
-- GitHub Actions deployment over SSH
-- production access should keep SSH restricted to approved admin access paths
+- OCI Ampere A1 VM
+- Docker-based website runtime
+- NGINX serving the built React app
+- SSH restricted to approved admin CIDRs only
+- HTTPS cutover handled after DNS and certificate issuance
 
-## Trust Notes
+## Contact intake
 
-- the public site and trust package align to a Washington commercial posture
-- customer-facing commitments belong in executed agreements, not in README copy
-- internal automation remains supervised; client-facing approvals stay human-controlled
+The React site posts to `VITE_CONTACT_ENDPOINT`, defaulting to `/api/contact`.
+
+For launch, either:
+
+- reverse proxy `/api/contact` to the CRM backend
+- set `VITE_CONTACT_ENDPOINT` to a live intake endpoint before build
+- accept direct email fallback as the temporary intake path

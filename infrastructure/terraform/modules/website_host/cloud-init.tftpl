@@ -10,7 +10,7 @@ write_files:
       #!/usr/bin/env bash
       set -euo pipefail
 
-      dnf install -y dnf-utils git
+      dnf install -y dnf-utils git curl
       dnf config-manager --enable ol9_addons
       dnf install -y docker-engine docker-cli containerd.io docker-compose-plugin
 
@@ -18,6 +18,7 @@ write_files:
       usermod -aG docker opc || true
 
       mkdir -p /opt/desir
+      mkdir -p /var/log/desir
 
       if [ ! -d /opt/desir/source/.git ]; then
         git clone ${repo_url} /opt/desir/source
@@ -34,13 +35,21 @@ write_files:
       fi
 
       cd /opt/desir/source/${website_directory}
-      docker build -t ${website_container_name}:latest .
-      docker rm -f ${website_container_name} || true
-      docker run -d \
-        --name ${website_container_name} \
-        --restart unless-stopped \
-        -p 80:80 \
-        ${website_container_name}:latest
+      export DESIR_WEBSITE_PORT=${website_host_port}
+      docker compose config >/dev/null
+      docker compose up -d --build
+
+      for attempt in $(seq 1 20); do
+        if curl -fsS http://127.0.0.1/healthz >/dev/null; then
+          exit 0
+        fi
+        sleep 3
+      done
+
+      echo "Website health check failed after bootstrap." >&2
+      docker compose ps >&2 || true
+      docker logs ${website_container_name} --tail 100 >&2 || true
+      exit 1
 
 runcmd:
   - [bash, /usr/local/bin/deploy-desir-website.sh]

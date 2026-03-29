@@ -91,6 +91,22 @@ resource "oci_core_network_security_group_security_rule" "http_ingress" {
   }
 }
 
+resource "oci_core_network_security_group_security_rule" "https_ingress" {
+  network_security_group_id = oci_core_network_security_group.website.id
+  direction                 = "INGRESS"
+  protocol                  = "6"
+  source                    = "0.0.0.0/0"
+  source_type               = "CIDR_BLOCK"
+  description               = "Allow public HTTPS traffic"
+
+  tcp_options {
+    destination_port_range {
+      min = 443
+      max = 443
+    }
+  }
+}
+
 resource "oci_core_network_security_group_security_rule" "ssh_ingress" {
   for_each                  = toset(var.ssh_allowed_cidrs)
   network_security_group_id = oci_core_network_security_group.website.id
@@ -142,6 +158,7 @@ resource "oci_core_instance" "website" {
       repo_ref               = var.repo_ref
       website_directory      = var.website_directory
       website_container_name = var.website_container_name
+      website_host_port      = var.website_host_port
     }))
   }
 

@@ -1,4 +1,5 @@
 import { Button } from '../components/Button'
+import { ClosingCta } from '../components/ClosingCta'
 import { SectionIntro } from '../components/SectionIntro'
 import { Seo } from '../components/Seo'
 import { assessmentTimeline } from '../data/siteContent'
@@ -25,7 +26,7 @@ export function AssessmentPage() {
         path="/assessment"
       />
 
-      <main className="shell py-14 lg:py-20">
+      <main id="main-content" className="shell py-14 lg:py-20">
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           <div className="space-y-6">
             <span className="eyebrow">Flagship first offer</span>
@@ -107,6 +108,8 @@ export function AssessmentPage() {
             </ul>
           </div>
         </section>
+
+        <ClosingCta eyebrow="Commercial next step" />
       </main>
     </>
   )

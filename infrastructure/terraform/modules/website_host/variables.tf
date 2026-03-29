@@ -68,6 +68,11 @@ variable "ssh_allowed_cidrs" {
     condition     = length(var.ssh_allowed_cidrs) > 0
     error_message = "Provide at least one admin CIDR for SSH access."
   }
+
+  validation {
+    condition     = !contains(var.ssh_allowed_cidrs, "0.0.0.0/0")
+    error_message = "Do not allow SSH from 0.0.0.0/0. Use a specific admin or VPN CIDR."
+  }
 }
 
 variable "repo_url" {
@@ -91,6 +96,12 @@ variable "website_container_name" {
   description = "Container name used for the website."
   type        = string
   default     = "desirsolutions-website"
+}
+
+variable "website_host_port" {
+  description = "Host port exposed by Docker Compose for the website container."
+  type        = number
+  default     = 80
 }
 
 variable "custom_image_id" {

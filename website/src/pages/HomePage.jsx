@@ -12,7 +12,7 @@ export function HomePage() {
         path="/"
       />
 
-      <main>
+      <main id="main-content">
         <section className="shell grid gap-10 py-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-20">
           <div className="space-y-7">
             <span className="eyebrow">For lean IT teams under delivery pressure</span>
