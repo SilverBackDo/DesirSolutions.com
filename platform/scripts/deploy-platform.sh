@@ -7,6 +7,7 @@ PLATFORM_SOURCE_DIR="$REPO_ROOT/platform"
 PLATFORM_ROOT="${PLATFORM_ROOT:-/srv/platform}"
 PLATFORM_ENV_FILE="${PLATFORM_ENV_FILE:-$PLATFORM_ROOT/.env}"
 DEFAULT_DESIRSOLUTIONS_IMAGE="ghcr.io/silverbackdo/desirsolutions-website:latest"
+CURRENT_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-desirsolutions-platform}"
 
 run() {
   if [ "$EUID" -eq 0 ]; then
@@ -58,6 +59,26 @@ wait_for_healthy() {
   exit 1
 }
 
+remove_conflicting_container() {
+  local container_name="$1"
+  local existing_project=""
+
+  if ! run docker inspect "$container_name" >/dev/null 2>&1; then
+    return
+  fi
+
+  existing_project=$(run docker inspect -f '{{ index .Config.Labels "com.docker.compose.project" }}' "$container_name" 2>/dev/null || true)
+  if [ "$existing_project" != "$CURRENT_PROJECT_NAME" ]; then
+    run docker rm -f "$container_name"
+  fi
+}
+
+remove_legacy_runtime() {
+  for container_name in reverse-proxy desirsolutions-site bellahburger-site alcines-site; do
+    remove_conflicting_container "$container_name"
+  done
+}
+
 install_runtime_assets() {
   run install -d -m 0755 "$PLATFORM_ROOT"
   run install -d -m 0755 "$PLATFORM_ROOT/traefik/acme"
@@ -82,6 +103,7 @@ main() {
   install_runtime_assets
 
   run docker pull "$DESIRSOLUTIONS_IMAGE"
+  remove_legacy_runtime
   run docker compose --env-file "$PLATFORM_ENV_FILE" -f "$PLATFORM_ROOT/compose.yaml" config > /dev/null
   run docker compose --env-file "$PLATFORM_ENV_FILE" -f "$PLATFORM_ROOT/compose.yaml" up -d --remove-orphans
   wait_for_healthy "desirsolutions-site" 40

@@ -76,4 +76,5 @@ services:
 
 networks:
   platform_edge:
+    external: true
     name: platform_edge

@@ -51,6 +51,10 @@ configure_services() {
     run firewall-cmd --permanent --add-service=https
     run firewall-cmd --reload
   fi
+
+  if ! run docker network inspect platform_edge >/dev/null 2>&1; then
+    run docker network create platform_edge
+  fi
 }
 
 ensure_layout() {
