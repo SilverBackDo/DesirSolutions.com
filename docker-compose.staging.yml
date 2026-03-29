@@ -1,14 +1,15 @@
 services:
   frontend:
     build: .
-    container_name: desir-frontend
+    container_name: desir-staging-frontend
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${STAGING_HTTP_PORT:-8080}:80"
+      - "${STAGING_HTTPS_PORT:-8443}:443"
     volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot-staging/conf:/etc/letsencrypt
+      - ./certbot-staging/www:/var/www/certbot:ro
+      - ./nginx/default.staging.conf:/etc/nginx/conf.d/default.conf:ro
     healthcheck:
       test:
         [
@@ -35,11 +36,11 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - desir-net
+      - desir-staging-net
 
   crm-frontend:
     build: ./crm-project-Desir-Tech/frontend
-    container_name: desir-crm-frontend
+    container_name: desir-staging-crm-frontend
     restart: unless-stopped
     expose:
       - "80"
@@ -68,16 +69,16 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - desir-net
+      - desir-staging-net
 
   backend:
     build: ./crm-project-Desir-Tech/backend
-    container_name: desir-backend
+    container_name: desir-staging-backend
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.staging
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:${STAGING_BACKEND_PORT:-18000}:8000"
     expose:
       - "8000"
     depends_on:
@@ -110,15 +111,15 @@ services:
         max-size: "25m"
         max-file: "5"
     networks:
-      - desir-net
+      - desir-staging-net
 
   ai-worker:
     build: ./crm-project-Desir-Tech/backend
-    container_name: desir-ai-worker
+    container_name: desir-staging-ai-worker
     restart: unless-stopped
     command: ["python", "-m", "app.worker"]
     env_file:
-      - .env
+      - .env.staging
     depends_on:
       db:
         condition: service_healthy
@@ -149,11 +150,11 @@ services:
         max-size: "25m"
         max-file: "5"
     networks:
-      - desir-net
+      - desir-staging-net
 
   redis:
     image: redis:7-alpine
-    container_name: desir-redis
+    container_name: desir-staging-redis
     restart: unless-stopped
     command:
       [
@@ -184,14 +185,14 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - desir-net
+      - desir-staging-net
 
   db:
     image: postgres:16-alpine
-    container_name: desir-db
+    container_name: desir-staging-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-desir}
+      POSTGRES_DB: ${DB_NAME:-desir_staging}
       POSTGRES_USER: ${DB_USER:-desiruser}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     volumes:
@@ -203,7 +204,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${DB_USER:-desiruser} -d ${DB_NAME:-desir}",
+          "pg_isready -U ${DB_USER:-desiruser} -d ${DB_NAME:-desir_staging}",
         ]
       interval: 10s
       timeout: 5s
@@ -220,17 +221,17 @@ services:
         max-size: "25m"
         max-file: "5"
     networks:
-      - desir-net
+      - desir-staging-net
 
   pgadmin:
     image: dpage/pgadmin4:8
-    container_name: desir-pgadmin
+    container_name: desir-staging-pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@desirsolutions.com}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-staging-admin@desirsolutions.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?PGADMIN_DEFAULT_PASSWORD is required}
     ports:
-      - "127.0.0.1:5050:80"
+      - "127.0.0.1:${STAGING_PGADMIN_PORT:-15050}:80"
     depends_on:
       db:
         condition: service_healthy
@@ -242,15 +243,15 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - desir-net
+      - desir-staging-net
 
   certbot:
     image: certbot/certbot
-    container_name: desir-certbot
+    container_name: desir-staging-certbot
     restart: unless-stopped
     volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
+      - ./certbot-staging/conf:/etc/letsencrypt
+      - ./certbot-staging/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     deploy:
       resources:
@@ -265,12 +266,12 @@ services:
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.140.1
-    container_name: desir-otel-collector
+    container_name: desir-staging-otel-collector
     restart: unless-stopped
     command: ["--config=/etc/otelcol-contrib/config.yaml"]
     volumes:
       - ./telemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
-      - ./telemetry/output:/var/lib/otel
+      - ./telemetry/staging-output:/var/lib/otel
     expose:
       - "4317"
       - "4318"
@@ -286,7 +287,7 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - desir-net
+      - desir-staging-net
 
 volumes:
   pgdata:
@@ -294,6 +295,5 @@ volumes:
   redisdata:
 
 networks:
-  desir-net:
+  desir-staging-net:
     driver: bridge
-
