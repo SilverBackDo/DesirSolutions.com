@@ -23,6 +23,7 @@ n8n_healthcheck_url: "https://{{ n8n_domain }}/healthz"
 desir_crm_base_url: https://desirsolutions.com
 desir_approval_digest_to: contact@desirsolutions.com
 n8n_secure_cookie: "true"
+n8n_smtp_enabled: false
 n8n_diagnostics_enabled: "false"
 n8n_version_notifications_enabled: "false"
 n8n_templates_enabled: "false"

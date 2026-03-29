@@ -145,11 +145,13 @@ Do not introduce a second public reverse proxy for n8n on this VM.
 - `EXECUTIONS_DATA_PRUNE=true`
 - `EXECUTIONS_DATA_MAX_AGE=336`
 - `EXECUTIONS_DATA_PRUNE_MAX_COUNT=10000`
-- `N8N_INVITE_LINKS_EMAIL_ONLY=true`
+- `N8N_INVITE_LINKS_EMAIL_ONLY=true` only after SMTP is enabled
 - `N8N_MFA_ENABLED=true`
 - filesystem binary data mode with persistent `.n8n` volume
 
-Owner bootstrap happens in the n8n UI on first startup after SMTP is configured.
+Owner bootstrap happens in the n8n UI on first startup.
+SMTP is optional for the first deployment pass and can be added later without changing the host model.
+Before SMTP is configured, invite-email and password-reset flows should be treated as unavailable.
 Keep `N8N_ENCRYPTION_KEY` and `N8N_USER_MANAGEMENT_JWT_SECRET` as separate long-lived secrets.
 Set `DESIR_CRM_BASE_URL`, `DESIR_CRM_API_KEY`, and `DESIR_APPROVAL_DIGEST_TO` so imported workflows can talk to the existing CRM backend.
 
@@ -178,12 +180,15 @@ Required GitHub secrets for deploy:
 - `N8N_POSTGRES_PASSWORD`
 - `N8N_ENCRYPTION_KEY`
 - `N8N_USER_MANAGEMENT_JWT_SECRET`
+- `N8N_LETSENCRYPT_EMAIL`
+- `DESIR_CRM_API_KEY`
+
+Optional until SMTP is enabled:
+
 - `N8N_SMTP_HOST`
 - `N8N_SMTP_USER`
 - `N8N_SMTP_PASSWORD`
 - `N8N_SMTP_SENDER`
-- `N8N_LETSENCRYPT_EMAIL`
-- `DESIR_CRM_API_KEY`
 
 Owner account creation is interactive on first launch and is not supplied through GitHub Actions secrets.
 
@@ -213,7 +218,7 @@ After the stack is up:
 1. Open `https://n8n.desirsolutions.com`.
 2. Complete the owner account creation in the UI.
 3. Enable 2FA for the owner account.
-4. Send one password reset test email.
+4. If SMTP is enabled, send one password reset test email.
 5. Run one restore drill against a non-production path before trusting backup operations.
 6. Import the workflow files from `n8n/workflows/`.
 7. Set `CONTACT_NOTIFICATION_WEBHOOK_URL` in the CRM backend to the n8n webhook path documented in `docs/n8n/CRM-INTEGRATION-SOP.md`.
@@ -221,7 +226,7 @@ After the stack is up:
 ## Day 30 Hardening Plan
 
 1. Move n8n data from boot volume to a dedicated OCI block volume if usage grows.
-2. Add SMTP and verify password reset flow.
+2. Add SMTP and verify password reset flow if it was skipped during the first launch.
 3. Add off-host backup sync.
 4. Add self-hosted runner or operator-controlled deploy lane for GitHub Actions.
 5. Add alerting for failed health checks and backup failures.
