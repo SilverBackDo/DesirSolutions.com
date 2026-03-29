@@ -1,30 +1,38 @@
 # OCI Platform Notes
 
-This directory contains OCI infrastructure assets related to the broader Desir Solutions hosting model.
+This directory now represents the founder-operable production path for Desir Solutions on OCI.
 
-## Launch Position
+## Runtime Model
 
-For the first 30-day launch window, the recommended production path is the simpler root `Desirtech` website and CRM deployment model, not a multi-site platform rollout.
+The platform is intentionally narrow:
 
-Use this directory when you need OCI infrastructure-as-code support, but keep the day-one business deployment focused on:
+- one Oracle Linux VM
+- one public domain: `desirsolutions.com`
+- one reverse proxy: Traefik
+- one public website container pulled from `ghcr.io/silverbackdo/desirsolutions-website`
 
-- one Desir Solutions site
-- one protected admin path
-- one documented deploy workflow
+There are no secondary sites, no public Traefik dashboard, and no dependency on unpublished repositories.
 
-## Terraform Security Change
+## What Terraform Does
 
-`platform/terraform/` no longer opens SSH to `0.0.0.0/0`.
+`platform/terraform/` provisions or manages:
 
-You must now explicitly set:
+- VCN, subnet, route table, security list
+- one OCI compute instance
+- locked-down SSH via `ssh_allowed_cidrs`
+- first-boot clone of this repository
+- host bootstrap plus one-site deployment
 
-- `ssh_allowed_cidrs`
+## Day-One Operating Rules
 
-If you prefer a stronger pattern, keep `ssh_allowed_cidrs = []` and use OCI Bastion or another approved administrative access method.
+- keep only `80` and `443` public
+- restrict `22` to your approved admin CIDR or use OCI Bastion
+- publish the website image through GitHub Actions before deployment
+- point DNS for `@` and `www` to the OCI public IP before expecting ACME to succeed
 
-## Practical Day-One Guidance
+## Deployment Flow
 
-- keep HTTP and HTTPS public only for the website
-- restrict SSH to approved admin IP ranges or Bastion
-- keep internal tools off the public edge where possible
-- prefer a single production website stack before adding multi-site complexity
+1. Push changes to `main` in `SilverBackDo/DesirSolutions.com`.
+2. Let GitHub Actions publish `ghcr.io/silverbackdo/desirsolutions-website:latest`.
+3. Run Terraform from `platform/terraform`.
+4. Verify `docker ps` and `curl -I --resolve desirsolutions.com:443:PUBLIC_IP https://desirsolutions.com`.

@@ -25,13 +25,14 @@ variable "private_key_path" {
 
 variable "region" {
   type        = string
-  description = "OCI region, for example us-phoenix-1."
+  description = "OCI region."
+  default     = "us-sanjose-1"
 }
 
 variable "availability_domain_name" {
   type        = string
   description = "Optional AD override for the compute instance."
-  default     = null
+  default     = "US-SANJOSE-1-AD-1"
 }
 
 variable "ssh_public_key" {
@@ -56,44 +57,10 @@ variable "letsencrypt_email" {
   description = "Email used by Traefik ACME registration."
 }
 
-variable "traefik_dashboard_host" {
-  type        = string
-  description = "Hostname used for the Traefik dashboard."
-  default     = "traefik.alcines.com"
-}
-
-variable "traefik_dashboard_users" {
-  type        = string
-  description = "Traefik basic-auth users string in htpasswd format."
-}
-
 variable "timezone" {
   type        = string
   description = "Host timezone written into the platform env file."
   default     = "America/Los_Angeles"
-}
-
-variable "bellahburger_domain" {
-  type        = string
-  description = "Primary hostname for the first website."
-  default     = "bellahburger.com"
-}
-
-variable "bellahburger_repo_url" {
-  type        = string
-  description = "GitHub repository for the first website."
-}
-
-variable "bellahburger_repo_branch" {
-  type        = string
-  description = "Git branch for the first website repo."
-  default     = "main"
-}
-
-variable "bellahburger_public_subdir" {
-  type        = string
-  description = "Optional publish subdirectory for the first website repo."
-  default     = ""
 }
 
 variable "desirsolutions_domain" {
@@ -102,28 +69,10 @@ variable "desirsolutions_domain" {
   default     = "desirsolutions.com"
 }
 
-variable "desirsolutions_repo_url" {
+variable "desirsolutions_image" {
   type        = string
-  description = "GitHub repository for the Desir Solutions site."
-  default     = "https://github.com/SilverBackDo/DesirSolutions.com.git"
-}
-
-variable "desirsolutions_repo_branch" {
-  type        = string
-  description = "Git branch for the Desir Solutions repo."
-  default     = "main"
-}
-
-variable "desirsolutions_public_subdir" {
-  type        = string
-  description = "Optional publish subdirectory for the Desir Solutions repo."
-  default     = ""
-}
-
-variable "alcines_domain" {
-  type        = string
-  description = "Primary hostname for the consultant profile site."
-  default     = "alcines.com"
+  description = "Container image used for the public Desir Solutions website."
+  default     = "ghcr.io/silverbackdo/desirsolutions-website:latest"
 }
 
 variable "vcn_display_name" {
@@ -226,12 +175,22 @@ variable "ssh_allowed_cidrs" {
   type        = list(string)
   description = "Approved source CIDRs for SSH access. Leave empty to require another admin-access path such as OCI Bastion."
   default     = []
+
+  validation {
+    condition     = alltrue([for cidr in var.ssh_allowed_cidrs : cidr != "0.0.0.0/0"])
+    error_message = "ssh_allowed_cidrs must not include 0.0.0.0/0. Restrict SSH to explicit admin CIDRs or use OCI Bastion."
+  }
 }
 
 variable "image_ocid" {
   type        = string
   description = "Optional explicit Oracle Linux image OCID override."
   default     = null
+
+  validation {
+    condition     = var.image_ocid == null || can(regex("^ocid1\\.image\\.", var.image_ocid))
+    error_message = "image_ocid must be null or a valid OCI image OCID."
+  }
 }
 
 variable "image_operating_system" {
@@ -250,40 +209,73 @@ variable "existing_vcn_id" {
   type        = string
   description = "Optional explicit VCN OCID to reuse."
   default     = null
+
+  validation {
+    condition     = var.existing_vcn_id == null || can(regex("^ocid1\\.vcn\\.", var.existing_vcn_id))
+    error_message = "existing_vcn_id must be null or a valid VCN OCID."
+  }
 }
 
 variable "existing_subnet_id" {
   type        = string
   description = "Optional explicit subnet OCID to reuse."
   default     = null
+
+  validation {
+    condition     = var.existing_subnet_id == null || can(regex("^ocid1\\.subnet\\.", var.existing_subnet_id))
+    error_message = "existing_subnet_id must be null or a valid subnet OCID."
+  }
 }
 
 variable "existing_internet_gateway_id" {
   type        = string
   description = "Optional explicit internet gateway OCID to reuse."
   default     = null
+
+  validation {
+    condition     = var.existing_internet_gateway_id == null || can(regex("^ocid1\\.internetgateway\\.", var.existing_internet_gateway_id))
+    error_message = "existing_internet_gateway_id must be null or a valid internet gateway OCID."
+  }
 }
 
 variable "existing_route_table_id" {
   type        = string
   description = "Optional explicit route table OCID to reuse."
   default     = null
+
+  validation {
+    condition     = var.existing_route_table_id == null || can(regex("^ocid1\\.routetable\\.", var.existing_route_table_id))
+    error_message = "existing_route_table_id must be null or a valid route table OCID."
+  }
 }
 
 variable "existing_security_list_id" {
   type        = string
   description = "Optional explicit security list OCID to reuse."
   default     = null
+
+  validation {
+    condition     = var.existing_security_list_id == null || can(regex("^ocid1\\.securitylist\\.", var.existing_security_list_id))
+    error_message = "existing_security_list_id must be null or a valid security list OCID."
+  }
 }
 
 variable "existing_instance_id" {
   type        = string
   description = "Optional explicit compute instance OCID to reuse."
   default     = null
+
+  validation {
+    condition     = var.existing_instance_id == null || can(regex("^ocid1\\.instance\\.", var.existing_instance_id))
+    error_message = "existing_instance_id must be null or a valid instance OCID."
+  }
 }
 
 variable "freeform_tags" {
   type        = map(string)
   description = "Additional freeform tags applied to created OCI resources."
-  default     = {}
+  default = {
+    project    = "consulting-mini-cloud"
+    managed-by = "terraform"
+  }
 }

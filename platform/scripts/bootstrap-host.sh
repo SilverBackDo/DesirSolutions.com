@@ -22,8 +22,7 @@ install_packages() {
     exit 1
   fi
 
-  run dnf -y update
-  run dnf -y install git curl wget htop tmux docker docker-compose-plugin || run dnf -y install git curl wget htop tmux docker
+  run dnf -y --setopt=install_weak_deps=False --setopt=max_parallel_downloads=1 install git curl wget tmux docker docker-compose-plugin || run dnf -y --setopt=install_weak_deps=False --setopt=max_parallel_downloads=1 install git curl wget tmux docker
 }
 
 configure_services() {
@@ -48,9 +47,6 @@ ensure_layout() {
   run install -d -m 0755 "$PLATFORM_ROOT"
   run install -d -m 0755 "$PLATFORM_ROOT/traefik"
   run install -d -m 0755 "$PLATFORM_ROOT/traefik/acme"
-  run install -d -m 0755 "$PLATFORM_ROOT/bellahburger"
-  run install -d -m 0755 "$PLATFORM_ROOT/desirsolutions"
-  run install -d -m 0755 "$PLATFORM_ROOT/Alcines"
   run install -m 0644 "$PLATFORM_SOURCE_DIR/compose.yaml" "$PLATFORM_ROOT/compose.yaml"
 
   if [ ! -f "$PLATFORM_ROOT/traefik/acme/acme.json" ]; then
@@ -66,19 +62,10 @@ write_env_if_missing() {
 
   tmp_env=$(mktemp)
   cat >"$tmp_env" <<EOF
-LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-change-me@example.com}
-TRAEFIK_DASHBOARD_HOST=${TRAEFIK_DASHBOARD_HOST:-traefik.alcines.com}
-TRAEFIK_DASHBOARD_USERS=${TRAEFIK_DASHBOARD_USERS:-admin:replace_with_htpasswd_hash}
-TZ=${TZ:-America/Los_Angeles}
-BELLAHBURGER_DOMAIN=${BELLAHBURGER_DOMAIN:-bellahburger.com}
-BELLAHBURGER_REPO_URL=${BELLAHBURGER_REPO_URL:-https://github.com/SilverBackDo/bellahburger.git}
-BELLAHBURGER_REPO_BRANCH=${BELLAHBURGER_REPO_BRANCH:-main}
-BELLAHBURGER_PUBLIC_SUBDIR=${BELLAHBURGER_PUBLIC_SUBDIR:-}
-DESIRSOLUTIONS_DOMAIN=${DESIRSOLUTIONS_DOMAIN:-desirsolutions.com}
-DESIRSOLUTIONS_REPO_URL=${DESIRSOLUTIONS_REPO_URL:-https://github.com/SilverBackDo/DesirSolutions.com.git}
-DESIRSOLUTIONS_REPO_BRANCH=${DESIRSOLUTIONS_REPO_BRANCH:-main}
-DESIRSOLUTIONS_PUBLIC_SUBDIR=${DESIRSOLUTIONS_PUBLIC_SUBDIR:-}
-ALCINES_DOMAIN=${ALCINES_DOMAIN:-alcines.com}
+LETSENCRYPT_EMAIL='${LETSENCRYPT_EMAIL:-contact@desirsolutions.com}'
+TZ='${TZ:-America/Los_Angeles}'
+DESIRSOLUTIONS_DOMAIN='${DESIRSOLUTIONS_DOMAIN:-desirsolutions.com}'
+DESIRSOLUTIONS_IMAGE='${DESIRSOLUTIONS_IMAGE:-ghcr.io/silverbackdo/desirsolutions-website:latest}'
 EOF
   run install -m 0600 "$tmp_env" "$PLATFORM_ENV_FILE"
   rm -f "$tmp_env"

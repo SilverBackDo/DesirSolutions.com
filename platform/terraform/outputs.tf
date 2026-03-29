@@ -13,18 +13,14 @@ output "ssh_command" {
   description = "Convenience SSH command for the platform host."
 }
 
-output "traefik_dashboard_url" {
-  value       = "https://${var.traefik_dashboard_host}"
-  description = "Traefik dashboard URL."
+output "website_url" {
+  value       = "https://${var.desirsolutions_domain}"
+  description = "Public URL served by the platform."
 }
 
-output "website_urls" {
-  value = {
-    bellahburger   = "https://${var.bellahburger_domain}"
-    desirsolutions = "https://${var.desirsolutions_domain}"
-    alcines        = "https://${var.alcines_domain}"
-  }
-  description = "Website URLs served by the platform."
+output "healthcheck_url" {
+  value       = "https://${var.desirsolutions_domain}/healthz"
+  description = "Health endpoint for the public website after DNS and TLS cutover."
 }
 
 output "network_ids" {

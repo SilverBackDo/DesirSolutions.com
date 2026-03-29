@@ -174,21 +174,12 @@ resource "oci_core_instance" "platform" {
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
     user_data = base64encode(templatefile("${path.module}/user_data.sh.tftpl", {
-      platform_repo_url            = var.platform_repo_url
-      platform_repo_ref            = var.platform_repo_ref
-      letsencrypt_email            = var.letsencrypt_email
-      traefik_dashboard_host       = var.traefik_dashboard_host
-      traefik_dashboard_users      = var.traefik_dashboard_users
-      timezone                     = var.timezone
-      bellahburger_domain          = var.bellahburger_domain
-      bellahburger_repo_url        = var.bellahburger_repo_url
-      bellahburger_repo_branch     = var.bellahburger_repo_branch
-      bellahburger_public_subdir   = var.bellahburger_public_subdir
-      desirsolutions_domain        = var.desirsolutions_domain
-      desirsolutions_repo_url      = var.desirsolutions_repo_url
-      desirsolutions_repo_branch   = var.desirsolutions_repo_branch
-      desirsolutions_public_subdir = var.desirsolutions_public_subdir
-      alcines_domain               = var.alcines_domain
+      platform_repo_url     = var.platform_repo_url
+      platform_repo_ref     = var.platform_repo_ref
+      letsencrypt_email     = var.letsencrypt_email
+      timezone              = var.timezone
+      desirsolutions_domain = var.desirsolutions_domain
+      desirsolutions_image  = var.desirsolutions_image
     }))
   }
 
@@ -196,6 +187,12 @@ resource "oci_core_instance" "platform" {
     source_type             = "image"
     source_id               = local.image_id
     boot_volume_size_in_gbs = var.boot_volume_size_in_gbs
+  }
+
+  lifecycle {
+    # Bootstrap scripts are for first boot only. Once the instance is live,
+    # changing user_data should not force a destructive replacement.
+    ignore_changes = [metadata["user_data"]]
   }
 }
 

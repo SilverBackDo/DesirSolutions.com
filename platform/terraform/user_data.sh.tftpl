@@ -1,36 +1,64 @@
 #!/bin/bash
 set -euxo pipefail
 
-if command -v dnf >/dev/null 2>&1; then
-  dnf -y install git || true
+ensure_swap_file() {
+  local swap_path="$1"
+  local swap_size="$2"
+
+  if swapon --show=NAME --noheadings | grep -qx "$swap_path"; then
+    return
+  fi
+
+  if [ ! -f "$swap_path" ]; then
+    if command -v fallocate >/dev/null 2>&1; then
+      fallocate -l "$swap_size" "$swap_path" || dd if=/dev/zero of="$swap_path" bs=1M count=$(( $${swap_size%G} * 1024 )) status=progress
+    else
+      dd if=/dev/zero of="$swap_path" bs=1M count=$(( $${swap_size%G} * 1024 )) status=progress
+    fi
+  fi
+
+  chmod 600 "$swap_path"
+  if ! blkid -t TYPE=swap "$swap_path" >/dev/null 2>&1; then
+    mkswap "$swap_path"
+  fi
+  swapon "$swap_path"
+
+  if ! grep -q "^$swap_path " /etc/fstab; then
+    echo "$swap_path none swap defaults 0 0" >> /etc/fstab
+  fi
+}
+
+current_swap_mb=$(free -m | awk '/^Swap:/ {print $2}')
+if [ "$${current_swap_mb:-0}" -lt 6144 ]; then
+  ensure_swap_file /swapfile 2G
+
+  current_swap_mb=$(free -m | awk '/^Swap:/ {print $2}')
+  if [ "$${current_swap_mb:-0}" -lt 6144 ]; then
+    ensure_swap_file /swapfile-extra 4G
+  fi
 fi
 
-if [ ! -d /opt/consulting-mini-cloud/.git ]; then
-  git clone --branch '${platform_repo_ref}' '${platform_repo_url}' /opt/consulting-mini-cloud
+if command -v dnf >/dev/null 2>&1; then
+  dnf -y --setopt=install_weak_deps=False --setopt=max_parallel_downloads=1 install git || true
+fi
+
+if [ ! -d /opt/desirsolutions-platform/.git ]; then
+  git clone --branch '${platform_repo_ref}' '${platform_repo_url}' /opt/desirsolutions-platform
 else
-  git -C /opt/consulting-mini-cloud fetch --all --prune
-  git -C /opt/consulting-mini-cloud checkout '${platform_repo_ref}'
-  git -C /opt/consulting-mini-cloud pull --ff-only origin '${platform_repo_ref}'
+  git -C /opt/desirsolutions-platform fetch --all --prune
+  git -C /opt/desirsolutions-platform checkout '${platform_repo_ref}'
+  git -C /opt/desirsolutions-platform pull --ff-only origin '${platform_repo_ref}'
 fi
 
 install -d -m 0755 /srv/platform
 cat >/srv/platform/.env <<'ENVFILE'
-LETSENCRYPT_EMAIL=${letsencrypt_email}
-TRAEFIK_DASHBOARD_HOST=${traefik_dashboard_host}
-TRAEFIK_DASHBOARD_USERS=${traefik_dashboard_users}
-TZ=${timezone}
-BELLAHBURGER_DOMAIN=${bellahburger_domain}
-BELLAHBURGER_REPO_URL=${bellahburger_repo_url}
-BELLAHBURGER_REPO_BRANCH=${bellahburger_repo_branch}
-BELLAHBURGER_PUBLIC_SUBDIR=${bellahburger_public_subdir}
-DESIRSOLUTIONS_DOMAIN=${desirsolutions_domain}
-DESIRSOLUTIONS_REPO_URL=${desirsolutions_repo_url}
-DESIRSOLUTIONS_REPO_BRANCH=${desirsolutions_repo_branch}
-DESIRSOLUTIONS_PUBLIC_SUBDIR=${desirsolutions_public_subdir}
-ALCINES_DOMAIN=${alcines_domain}
+LETSENCRYPT_EMAIL='${letsencrypt_email}'
+TZ='${timezone}'
+DESIRSOLUTIONS_DOMAIN='${desirsolutions_domain}'
+DESIRSOLUTIONS_IMAGE='${desirsolutions_image}'
 ENVFILE
 chmod 600 /srv/platform/.env
 
-cd /opt/consulting-mini-cloud
+cd /opt/desirsolutions-platform
 bash platform/scripts/bootstrap-host.sh
 bash platform/scripts/deploy-platform.sh

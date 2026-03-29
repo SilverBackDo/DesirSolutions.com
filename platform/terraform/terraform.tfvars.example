@@ -14,20 +14,8 @@ ssh_allowed_cidrs = ["203.0.113.10/32"] # replace with approved admin IPs or lea
 platform_repo_url       = "https://github.com/SilverBackDo/DesirSolutions.com.git"
 platform_repo_ref       = "main"
 letsencrypt_email       = "contact@example.com"
-traefik_dashboard_host  = "traefik.alcines.com"
-traefik_dashboard_users = "admin:replace_with_htpasswd_hash"
-
-bellahburger_domain        = "bellahburger.com"
-bellahburger_repo_url      = "https://github.com/SilverBackDo/bellahburger.git"
-bellahburger_repo_branch   = "main"
-bellahburger_public_subdir = ""
-
-desirsolutions_domain         = "desirsolutions.com"
-desirsolutions_repo_url       = "https://github.com/SilverBackDo/DesirSolutions.com.git"
-desirsolutions_repo_branch    = "main"
-desirsolutions_public_subdir  = ""
-
-alcines_domain = "alcines.com"
+desirsolutions_domain    = "desirsolutions.com"
+desirsolutions_image     = "ghcr.io/silverbackdo/desirsolutions-website:latest"
 
 # Optional explicit reuse of existing infrastructure. Comment out when you want
 # Terraform to discover by display name and create missing resources.
