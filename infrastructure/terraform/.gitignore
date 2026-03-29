@@ -2,6 +2,12 @@
 *.tfstate
 *.tfstate.*
 terraform.tfvars
+tfplan
+tfplan.json
+lookupplan
+schema.json
+plan-output.txt
+plan-output.txtterraform
 override.tf
 override.tf.json
 *_override.tf

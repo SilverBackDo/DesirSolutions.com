@@ -11,12 +11,12 @@ It reflects the current commercial posture:
 
 ## Included Materials
 
-- `SECURITY_OVERVIEW.md`
-- `SUBPROCESSORS.md`
-- `INCIDENT_NOTIFICATION_POLICY.md`
-- `DATA_PROCESSING_ADDENDUM_TEMPLATE.md`
-- `MASTER_SERVICES_AGREEMENT_TEMPLATE.md`
-- `STATEMENT_OF_WORK_TEMPLATE.md`
+- `docs/security/SECURITY_OVERVIEW.md`
+- `docs/security/SUBPROCESSORS.md`
+- `docs/security/INCIDENT_NOTIFICATION_POLICY.md`
+- `docs/contracts/DATA_PROCESSING_ADDENDUM_TEMPLATE.md`
+- `docs/contracts/MASTER_SERVICES_AGREEMENT_TEMPLATE.md`
+- `docs/contracts/STATEMENT_OF_WORK_TEMPLATE.md`
 - `trust.html`
 - `terms-privacy.html`
 
