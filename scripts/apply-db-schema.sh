@@ -6,11 +6,12 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SQL_DIR="${ROOT_DIR}/db/sql"
+APP_ENV_FILE="${APP_ENV_FILE:-${ROOT_DIR}/.env}"
 
-if [ -f "${ROOT_DIR}/.env" ]; then
+if [ -f "${APP_ENV_FILE}" ]; then
   set -a
   # shellcheck disable=SC1091
-  source "${ROOT_DIR}/.env"
+  source <(sed 's/\r$//' "${APP_ENV_FILE}")
   set +a
 fi
 
