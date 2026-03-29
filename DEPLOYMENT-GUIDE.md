@@ -165,7 +165,7 @@ cd /opt/desir/DesirSolutions.com || git clone https://github.com/SilverBackDo/De
 cd /opt/desir/DesirSolutions.com
 git fetch --all --prune
 git checkout main
-git reset --hard origin/main
+git pull --ff-only origin main
 cd website
 export DESIR_WEBSITE_IMAGE=ghcr.io/silverbackdo/desirsolutions-website:latest
 docker compose -f docker-compose.deploy.yml pull
