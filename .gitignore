@@ -1,11 +1,15 @@
 # ─── Environment ───
 .env
+.env.staging
+terraform.tfvars
 *.env.local
 .env.production
 
 # ─── Certificates ───
 certbot/conf/
 certbot/www/
+certbot-staging/conf/
+certbot-staging/www/
 
 # ─── Python ───
 __pycache__/
@@ -22,8 +26,18 @@ npm-debug.log*
 
 platform/.env
 platform/terraform/*.tfvars
+platform/terraform/*.tfstate
+platform/terraform/*.tfstate.*
+platform/terraform/tfplan
+platform/terraform/tfplan.json
+platform/terraform/plan-output.txt
+platform/terraform/plan-output.txtterraform
 platform/terraform/.terraform/
 platform/traefik/acme/acme.json
+n8n/.env
+n8n/data/
+n8n/postgres/
+ansible/group_vars/n8n_hosts/secrets.yml
 # ─── IDE ───
 .vscode/
 .idea/
@@ -43,5 +57,9 @@ Thumbs.db
 # ─── Temp / Claude ───
 tmpclaude-*
 *.ini
+tmp/
 
-
+telemetry/output/*
+!telemetry/output/.gitkeep
+telemetry/staging-output/*
+!telemetry/staging-output/.gitkeep

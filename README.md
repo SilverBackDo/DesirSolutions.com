@@ -18,6 +18,9 @@ Use these paths for the active launch system:
 - `website/` - React + Vite production site
 - `website/nginx/` - container runtime and TLS configs
 - `infrastructure/terraform/` - OCI VM deployment stack
+- `ansible/`, `n8n/`, and `docs/n8n/` - n8n automation pack for the existing Docker + Traefik platform
+- `n8n/workflows/` - CRM-linked workflow imports for lead qualification dispatch and sales digests
+- `docs/` - architecture, security, operations, contract-summary, and archived reference docs
 - `.github/workflows/validate.yml` - website and Terraform validation
 - `.github/workflows/deploy.yml` - website deployment workflow
 
