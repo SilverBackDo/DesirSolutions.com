@@ -1,0 +1,27 @@
+tenancy_ocid      = "ocid1.tenancy.oc1..example"
+user_ocid         = "ocid1.user.oc1..example"
+fingerprint       = "12:34:56:78:90:ab:cd:ef:12:34:56:78:90:ab:cd:ef"
+private_key_path  = "~/.oci/oci_api_key.pem"
+region            = "us-phoenix-1"
+compartment_id    = "ocid1.compartment.oc1..example"
+
+project_name        = "desir-dev"
+vcn_cidr            = "10.40.0.0/16"
+public_subnet_cidr  = "10.40.10.0/24"
+shape               = "VM.Standard.A1.Flex"
+instance_ocpus      = 1
+instance_memory_gb  = 6
+boot_volume_size_gb = 80
+
+ssh_authorized_keys = [
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIexample founder@laptop"
+]
+
+ssh_allowed_cidrs = [
+  "203.0.113.10/32"
+]
+
+repo_url               = "https://github.com/SilverBackDo/DesirSolutions.com.git"
+repo_ref               = "main"
+website_directory      = "website"
+website_container_name = "desirsolutions-website-dev"

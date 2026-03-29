@@ -1,0 +1,46 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+write_files:
+  - path: /usr/local/bin/deploy-desir-website.sh
+    permissions: "0755"
+    owner: root:root
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      dnf install -y dnf-utils git
+      dnf config-manager --enable ol9_addons
+      dnf install -y docker-engine docker-cli containerd.io docker-compose-plugin
+
+      systemctl enable --now docker
+      usermod -aG docker opc || true
+
+      mkdir -p /opt/desir
+
+      if [ ! -d /opt/desir/source/.git ]; then
+        git clone ${repo_url} /opt/desir/source
+      fi
+
+      cd /opt/desir/source
+      git fetch --all --prune
+
+      if git show-ref --verify --quiet refs/remotes/origin/${repo_ref}; then
+        git checkout ${repo_ref}
+        git reset --hard origin/${repo_ref}
+      else
+        git checkout ${repo_ref}
+      fi
+
+      cd /opt/desir/source/${website_directory}
+      docker build -t ${website_container_name}:latest .
+      docker rm -f ${website_container_name} || true
+      docker run -d \
+        --name ${website_container_name} \
+        --restart unless-stopped \
+        -p 80:80 \
+        ${website_container_name}:latest
+
+runcmd:
+  - [bash, /usr/local/bin/deploy-desir-website.sh]
