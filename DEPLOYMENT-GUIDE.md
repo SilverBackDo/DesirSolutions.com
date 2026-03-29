@@ -60,19 +60,9 @@ This provisions:
 
 ## 3. Image publishing and first HTTP bootstrap on the VM
 
-The production VM does not build the website locally. GitHub Actions builds and publishes the website image to GHCR, and the VM pulls that image for deployment.
+The production VM does not build the website locally. GitHub Actions builds and publishes the website image to GHCR. The founder then deploys that image from an allowlisted admin IP over SSH.
 
-Configure these repository secrets before the first deployment:
-
-- `OCI_VM_HOST`
-- `OCI_VM_USER`
-- `OCI_VM_SSH_KEY`
-
-Optional repository variable:
-
-- `OCI_WEBSITE_PORT`
-
-Run the `Deploy Desir Solutions website` workflow after the target commit lands on `main`.
+Run the `Publish Desir Solutions website image` workflow after the target commit lands on `main`.
 
 After `terraform apply`, connect with the Terraform output:
 
@@ -80,7 +70,7 @@ After `terraform apply`, connect with the Terraform output:
 ssh opc@PUBLIC_IP
 ```
 
-The cloud-init bootstrap pulls the published website image and runs the HTTP compose file on port `80`.
+The intended bootstrap path pulls the published website image and runs the HTTP compose file on port `80`.
 
 Validate:
 
@@ -167,7 +157,21 @@ Do not launch the public form while assuming `/api/contact` exists if it is not 
 
 ## 8. GitHub Actions
 
-The deployment workflow builds the website image, pushes it to GHCR, updates the checkout under `/opt/desir/DesirSolutions.com`, chooses `docker-compose.deploy.yml` before TLS or `docker-compose.prod.yml` after TLS, and waits for the container health check to turn healthy.
+GitHub-hosted runners cannot SSH into the OCI VM while SSH remains correctly restricted to your fixed admin CIDR. The automated workflow therefore publishes the website image only. Deploy the image from your allowlisted operator IP with the following runbook:
+
+```bash
+ssh opc@OCI_PUBLIC_IP
+cd /opt/desir/DesirSolutions.com || git clone https://github.com/SilverBackDo/DesirSolutions.com.git /opt/desir/DesirSolutions.com
+cd /opt/desir/DesirSolutions.com
+git fetch --all --prune
+git checkout main
+git reset --hard origin/main
+cd website
+export DESIR_WEBSITE_IMAGE=ghcr.io/silverbackdo/desirsolutions-website:latest
+docker compose -f docker-compose.deploy.yml pull
+docker compose -f docker-compose.deploy.yml up -d
+docker inspect -f '{{.State.Health.Status}}' desirsolutions-website
+```
 
 ## 9. Rollback
 

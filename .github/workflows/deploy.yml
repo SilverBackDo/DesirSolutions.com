@@ -1,4 +1,4 @@
-name: Deploy Desir Solutions website
+name: Publish Desir Solutions website image
 
 on:
   workflow_dispatch:
@@ -20,16 +20,13 @@ permissions:
   packages: write
 
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
-    environment: production
-    env:
-      APP_DIR: /opt/desir/DesirSolutions.com
-      DESIR_WEBSITE_PORT: ${{ vars.OCI_WEBSITE_PORT || '80' }}
-      GIT_REF: ${{ github.event.inputs.git_ref || 'main' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.git_ref || github.ref_name }}
 
       - name: Normalize image metadata
         id: image
@@ -58,47 +55,25 @@ jobs:
             ghcr.io/${{ steps.image.outputs.owner }}/desirsolutions-website:latest
             ghcr.io/${{ steps.image.outputs.owner }}/desirsolutions-website:${{ steps.image.outputs.tag }}
 
-      - name: Deploy website image to OCI VM via SSH
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.OCI_VM_HOST }}
-          username: ${{ secrets.OCI_VM_USER }}
-          key: ${{ secrets.OCI_VM_SSH_KEY }}
-          envs: APP_DIR,DESIR_WEBSITE_PORT,GIT_REF
-          script: |
-            set -euo pipefail
-            DESIR_WEBSITE_IMAGE="ghcr.io/${{ steps.image.outputs.owner }}/desirsolutions-website:${{ steps.image.outputs.tag }}"
-            if [ ! -d "$APP_DIR/.git" ]; then
-              mkdir -p "$(dirname "$APP_DIR")"
-              git clone --branch main https://github.com/${{ github.repository }}.git "$APP_DIR"
-            fi
-
-            cd "$APP_DIR"
-            git fetch --all --prune
-            git checkout "$GIT_REF"
-            if git rev-parse --verify "origin/$GIT_REF" >/dev/null 2>&1; then
-              git reset --hard "origin/$GIT_REF"
-            fi
-
-            cd website
-            export DESIR_WEBSITE_IMAGE
-            COMPOSE_FILE="docker-compose.deploy.yml"
-            if [ -f /etc/letsencrypt/live/desirsolutions.com/fullchain.pem ]; then
-              COMPOSE_FILE="docker-compose.prod.yml"
-            fi
-
-            docker compose -f "$COMPOSE_FILE" config >/dev/null
-            docker compose -f "$COMPOSE_FILE" pull
-            docker compose -f "$COMPOSE_FILE" up -d
-            docker compose -f "$COMPOSE_FILE" ps
-
-            for attempt in $(seq 1 20); do
-              status="$(docker inspect -f '{{.State.Health.Status}}' desirsolutions-website 2>/dev/null || true)"
-              if [ "$status" = "healthy" ]; then
-                exit 0
-              fi
-              sleep 3
-            done
-
-            docker logs desirsolutions-website --tail 100 >&2 || true
-            exit 1
+      - name: Publish deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## Website Image Published"
+            echo
+            echo "- Latest: \`ghcr.io/${{ steps.image.outputs.owner }}/desirsolutions-website:latest\`"
+            echo "- Commit tag: \`ghcr.io/${{ steps.image.outputs.owner }}/desirsolutions-website:${{ steps.image.outputs.tag }}\`"
+            echo
+            echo "Deploy from an allowlisted operator IP with:"
+            echo '```bash'
+            echo 'ssh opc@OCI_PUBLIC_IP'
+            echo 'cd /opt/desir/DesirSolutions.com || git clone https://github.com/SilverBackDo/DesirSolutions.com.git /opt/desir/DesirSolutions.com'
+            echo 'cd /opt/desir/DesirSolutions.com'
+            echo 'git fetch --all --prune && git checkout main && git reset --hard origin/main'
+            echo 'cd website'
+            echo 'export DESIR_WEBSITE_IMAGE=ghcr.io/${{ steps.image.outputs.owner }}/desirsolutions-website:${{ steps.image.outputs.tag }}'
+            echo 'docker compose -f docker-compose.deploy.yml pull'
+            echo 'docker compose -f docker-compose.deploy.yml up -d'
+            echo 'docker inspect -f "{{.State.Health.Status}}" desirsolutions-website'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
