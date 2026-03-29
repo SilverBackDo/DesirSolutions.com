@@ -22,7 +22,17 @@ install_packages() {
     exit 1
   fi
 
-  run dnf -y --setopt=install_weak_deps=False --setopt=max_parallel_downloads=1 install git curl wget tmux docker docker-compose-plugin || run dnf -y --setopt=install_weak_deps=False --setopt=max_parallel_downloads=1 install git curl wget tmux docker
+  if ! command -v git >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1 || ! command -v wget >/dev/null 2>&1 || ! command -v tmux >/dev/null 2>&1; then
+    run dnf -y --setopt=install_weak_deps=False --setopt=max_parallel_downloads=1 install git curl wget tmux
+  fi
+
+  if ! command -v docker >/dev/null 2>&1; then
+    run dnf -y --setopt=install_weak_deps=False --setopt=max_parallel_downloads=1 install docker || true
+  fi
+
+  if ! docker compose version >/dev/null 2>&1; then
+    run dnf -y --setopt=install_weak_deps=False --setopt=max_parallel_downloads=1 install docker-compose-plugin || true
+  fi
 }
 
 configure_services() {
