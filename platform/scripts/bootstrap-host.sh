@@ -78,6 +78,9 @@ DESIRSOLUTIONS_DOMAIN='${DESIRSOLUTIONS_DOMAIN:-desirsolutions.com}'
 DESIRSOLUTIONS_IMAGE='${DESIRSOLUTIONS_IMAGE:-ghcr.io/silverbackdo/desirsolutions-website:latest}'
 EOF
   run install -m 0600 "$tmp_env" "$PLATFORM_ENV_FILE"
+  if id "$DEFAULT_OPS_USER" >/dev/null 2>&1; then
+    run chown "$DEFAULT_OPS_USER":"$DEFAULT_OPS_USER" "$PLATFORM_ENV_FILE"
+  fi
   rm -f "$tmp_env"
 }
 
