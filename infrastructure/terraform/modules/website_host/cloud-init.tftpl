@@ -10,6 +10,14 @@ write_files:
       #!/usr/bin/env bash
       set -euo pipefail
 
+      if ! swapon --show | grep -q "/swapfile"; then
+        fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048
+        chmod 600 /swapfile
+        mkswap /swapfile
+        swapon /swapfile
+        echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
+      fi
+
       dnf install -y dnf-utils git curl
       dnf config-manager --enable ol9_addons
       dnf install -y docker-engine docker-cli containerd.io docker-compose-plugin
@@ -36,8 +44,10 @@ write_files:
 
       cd /opt/desir/source/${website_directory}
       export DESIR_WEBSITE_PORT=${website_host_port}
-      docker compose config >/dev/null
-      docker compose up -d --build
+      export DESIR_WEBSITE_IMAGE=${website_image}
+      docker compose -f docker-compose.deploy.yml config >/dev/null
+      docker compose -f docker-compose.deploy.yml pull
+      docker compose -f docker-compose.deploy.yml up -d
 
       for attempt in $(seq 1 20); do
         if curl -fsS http://127.0.0.1/healthz >/dev/null; then
@@ -47,7 +57,7 @@ write_files:
       done
 
       echo "Website health check failed after bootstrap." >&2
-      docker compose ps >&2 || true
+      docker compose -f docker-compose.deploy.yml ps >&2 || true
       docker logs ${website_container_name} --tail 100 >&2 || true
       exit 1
 

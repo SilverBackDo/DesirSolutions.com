@@ -25,4 +25,5 @@ repo_url               = "https://github.com/SilverBackDo/DesirSolutions.com.git
 repo_ref               = "main"
 website_directory      = "website"
 website_container_name = "desirsolutions-website-dev"
+website_image          = "ghcr.io/silverbackdo/desirsolutions-website:latest"
 website_host_port      = 80

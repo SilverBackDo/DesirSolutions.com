@@ -21,6 +21,8 @@ locals {
     var.custom_image_id,
     data.oci_core_images.oracle_linux.images[0].id,
   )
+
+  is_flex_shape = can(regex("Flex$", var.shape))
 }
 
 resource "oci_core_vcn" "this" {
@@ -139,9 +141,13 @@ resource "oci_core_instance" "website" {
   display_name        = "${var.project_name}-website"
   shape               = var.shape
 
-  shape_config {
-    ocpus         = var.instance_ocpus
-    memory_in_gbs = var.instance_memory_gb
+  dynamic "shape_config" {
+    for_each = local.is_flex_shape ? [1] : []
+
+    content {
+      ocpus         = var.instance_ocpus
+      memory_in_gbs = var.instance_memory_gb
+    }
   }
 
   create_vnic_details {
@@ -158,6 +164,7 @@ resource "oci_core_instance" "website" {
       repo_ref               = var.repo_ref
       website_directory      = var.website_directory
       website_container_name = var.website_container_name
+      website_image          = var.website_image
       website_host_port      = var.website_host_port
     }))
   }

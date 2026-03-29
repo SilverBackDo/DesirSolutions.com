@@ -98,6 +98,12 @@ variable "website_container_name" {
   default     = "desirsolutions-website"
 }
 
+variable "website_image" {
+  description = "OCI host runtime image for the website container."
+  type        = string
+  default     = "ghcr.io/silverbackdo/desirsolutions-website:latest"
+}
+
 variable "website_host_port" {
   description = "Host port exposed by Docker Compose for the website container."
   type        = number

@@ -16,6 +16,7 @@ module "website_host" {
   repo_ref                 = var.repo_ref
   website_directory        = var.website_directory
   website_container_name   = var.website_container_name
+  website_image            = var.website_image
   website_host_port        = var.website_host_port
   custom_image_id          = var.custom_image_id
 }

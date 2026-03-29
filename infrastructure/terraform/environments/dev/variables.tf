@@ -23,6 +23,10 @@ variable "repo_url" { type = string }
 variable "repo_ref" { type = string }
 variable "website_directory" { type = string }
 variable "website_container_name" { type = string }
+variable "website_image" {
+  type    = string
+  default = "ghcr.io/silverbackdo/desirsolutions-website:latest"
+}
 variable "website_host_port" { type = number }
 variable "custom_image_id" {
   type    = string
