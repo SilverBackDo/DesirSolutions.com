@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+STACK_ROOT="{{ n8n_stack_root }}"
+ENV_FILE="$STACK_ROOT/config/n8n.env"
+BACKUP_ROOT="{{ n8n_backup_root }}"
+RETENTION_DAYS="{{ n8n_backup_retention_days }}"
+TIMESTAMP="$(date -u +%F_%H%M%S)"
+ARCHIVE_DIR="$BACKUP_ROOT/$TIMESTAMP"
+
+set -a
+. "$ENV_FILE"
+set +a
+
+mkdir -p "$ARCHIVE_DIR"
+
+docker exec -e PGPASSWORD="$DB_POSTGRESDB_PASSWORD" {{ n8n_project_name }}-postgres pg_dump \
+  --clean \
+  --if-exists \
+  --no-owner \
+  --no-privileges \
+  -U "$DB_POSTGRESDB_USER" \
+  "$DB_POSTGRESDB_DATABASE" > "$ARCHIVE_DIR/n8n.sql"
+
+tar -czf "$ARCHIVE_DIR/n8n-home.tgz" -C "$N8N_DATA_PATH" .
+sha256sum "$ARCHIVE_DIR/n8n.sql" > "$ARCHIVE_DIR/n8n.sql.sha256"
+sha256sum "$ARCHIVE_DIR/n8n-home.tgz" > "$ARCHIVE_DIR/n8n-home.tgz.sha256"
+
+find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -mtime +"$RETENTION_DAYS" -exec rm -rf {} +
+
+echo "Backup completed in $ARCHIVE_DIR"

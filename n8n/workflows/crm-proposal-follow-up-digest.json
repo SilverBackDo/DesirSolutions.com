@@ -1,0 +1,135 @@
+{
+  "name": "CRM Proposal Follow-Up Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "custom",
+              "cronExpression": "0 30 9 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "b18a6b46-b30b-42ca-bb31-502da0fe7101",
+      "name": "Weekday 9:30am Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -540,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{($env.DESIR_CRM_BASE_URL || 'https://desirsolutions.com').replace(/\\/$/, '') + '/api/opportunities?stage=proposal&limit=100'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{$env.DESIR_CRM_API_KEY}}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "eb796a40-e1d3-4c02-90f4-db796ed07102",
+      "name": "List Proposal Opportunities",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -220,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst rows = $input.all().flatMap((item) => Array.isArray(item.json) ? item.json : [item.json]);\nconst stale = rows\n  .filter((row) => row && typeof row === 'object' && row.id)\n  .map((row) => {\n    const baseline = row.updated_at || row.created_at;\n    const ageDays = baseline ? Math.floor((now.getTime() - new Date(baseline).getTime()) / 86400000) : 0;\n    return { ...row, ageDays };\n  })\n  .filter((row) => row.ageDays >= 3)\n  .sort((a, b) => b.ageDays - a.ageDays);\nconst count = stale.length;\nconst subject = count > 0\n  ? `Proposal follow-up watchlist: ${count}`\n  : 'Proposal follow-up watchlist: clear';\nconst listItems = stale.slice(0, 25).map((row) => {\n  const value = row.estimated_value ?? 0;\n  const expectedClose = row.expected_close_date || 'n/a';\n  return `<li>Opportunity #${row.id} - ${row.name} - ${row.ageDays} day(s) stale - estimated value $${value} - expected close ${expectedClose}</li>`;\n});\nconst html = count > 0\n  ? `<p>${count} proposal-stage opportunity/opportunities have not moved in at least three days.</p><ul>${listItems.join('')}</ul><p>Use this list to schedule follow-up and log the next activity in CRM.</p>`\n  : '<p>No proposal-stage opportunities are older than three days without movement.</p>';\nconst text = count > 0\n  ? `${count} proposal-stage opportunities need follow-up. Review the CRM opportunity queue.`\n  : 'No proposal-stage opportunities need follow-up.';\nreturn [{ json: { count, subject, html, text } }];"
+      },
+      "id": "f50d9af0-3550-4d44-a9d4-69a43b3f7103",
+      "name": "Build Proposal Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.N8N_SMTP_SENDER || 'n8n@desirsolutions.com'}}",
+        "toEmail": "={{$env.DESIR_APPROVAL_DIGEST_TO}}",
+        "subject": "={{$json.subject}}",
+        "emailType": "html",
+        "message": "={{$json.html}}",
+        "options": {}
+      },
+      "id": "2ea8fe7a-c1a3-46de-9c0e-708a14f97104",
+      "name": "Send Proposal Digest",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        420,
+        260
+      ],
+      "credentials": {
+        "smtp": {
+          "name": "Desir Solutions SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Weekday 9:30am Trigger": {
+      "main": [
+        [
+          {
+            "node": "List Proposal Opportunities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Proposal Opportunities": {
+      "main": [
+        [
+          {
+            "node": "Build Proposal Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Proposal Digest": {
+      "main": [
+        [
+          {
+            "node": "Send Proposal Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8fa0f8a2-2374-4ac0-91f0-3763f1677105",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "id": "crm-proposal-follow-up-digest",
+  "tags": []
+}
