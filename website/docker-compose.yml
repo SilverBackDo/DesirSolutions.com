@@ -1,0 +1,9 @@
+services:
+  website:
+    build:
+      context: .
+    image: desirsolutions-website:latest
+    container_name: desirsolutions-website
+    restart: unless-stopped
+    ports:
+      - "${DESIR_WEBSITE_PORT:-8080}:80"
