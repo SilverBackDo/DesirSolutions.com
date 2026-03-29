@@ -1,0 +1,9 @@
+all:
+  children:
+    n8n_hosts:
+      hosts:
+        desir-oci-live:
+          ansible_host: REDACTED-RETIRED-OCI-HOST
+          ansible_user: opc
+          ansible_ssh_private_key_file: REDACTED-RETIRED-OCI-KEY
+          ansible_ssh_common_args: -o IdentitiesOnly=yes

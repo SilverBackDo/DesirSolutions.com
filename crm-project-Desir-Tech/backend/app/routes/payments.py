@@ -5,12 +5,12 @@ Incoming payment management endpoints.
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.auth import require_internal_access
+from app.auth import require_user_roles
 from app.database import get_db
 from app.models import IncomingPayment
 from app.schemas import IncomingPaymentCreate, IncomingPaymentResponse, IncomingPaymentUpdate
 
-router = APIRouter(dependencies=[Depends(require_internal_access)])
+router = APIRouter(dependencies=[Depends(require_user_roles("admin", "finance"))])
 
 
 @router.get("/", response_model=list[IncomingPaymentResponse])

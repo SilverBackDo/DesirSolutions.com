@@ -46,8 +46,17 @@ class ContactSubmissionCreate(BaseModel):
     website: str | None = Field(None, max_length=0)  # honeypot — must be empty
 
 
-class ContactSubmissionResponse(ContactSubmissionCreate):
+class ContactSubmissionResponse(BaseModel):
     id: int
+    name: str
+    email: EmailStr
+    company: str | None = None
+    role: str | None = None
+    environment: str | None = None
+    timeline: str | None = None
+    message: str | None = None
+    converted_to_lead: bool
+    converted_at: datetime | None = None
     created_at: datetime
 
     class Config:
@@ -68,6 +77,7 @@ class LoginResponse(BaseModel):
 class AuthUserResponse(BaseModel):
     username: str
     auth_type: str
+    role: str
 
 
 class LeadBase(BaseModel):
@@ -297,3 +307,168 @@ class IncomingPaymentResponse(IncomingPaymentBase):
 
     class Config:
         from_attributes = True
+
+
+class AgentBlueprintAgentResponse(BaseModel):
+    name: str
+    role: str
+    mission: str
+    inputs: list[str]
+    outputs: list[str]
+
+
+class AgentBlueprintWorkflowStepResponse(BaseModel):
+    order: int
+    name: str
+    description: str
+    owner: str
+    handoff_to: str
+
+
+class AgentBlueprintPromptResponse(BaseModel):
+    title: str
+    text: str
+
+
+class AgentBlueprintResponse(BaseModel):
+    framework: str
+    framework_label: str
+    name: str
+    objective: str
+    agents: list[AgentBlueprintAgentResponse]
+    workflow: list[AgentBlueprintWorkflowStepResponse]
+    automation_targets: list[str]
+    weekly_kpis: list[str]
+    starter_prompts: list[AgentBlueprintPromptResponse]
+
+
+class AIFactoryWorkflowResponse(BaseModel):
+    id: int
+    workflow_key: str
+    name: str
+    description: str
+    objective: str
+    version: int
+    status: str
+    autonomy_level: str
+    primary_provider: str
+    default_model: str | None = None
+    requires_human_approval: bool
+    config: dict | list | None = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AIFactoryRunLaunchOptions(BaseModel):
+    lead_id: int = Field(..., ge=1)
+    preferred_provider: str | None = Field(None, max_length=40)
+    preferred_model: str | None = Field(None, max_length=120)
+
+
+class AIFactoryRunCreate(AIFactoryRunLaunchOptions):
+    pass
+
+
+class AIFactoryProposalRunCreate(BaseModel):
+    opportunity_id: int = Field(..., ge=1)
+    preferred_provider: str | None = Field(None, max_length=40)
+    preferred_model: str | None = Field(None, max_length=120)
+
+
+class AIFactoryTaskResponse(BaseModel):
+    id: int
+    sequence_no: int
+    agent_key: str
+    agent_name: str
+    status: str
+    input_payload: dict | list | None = None
+    output_payload: dict | list | None = None
+    notes: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AIFactoryApprovalResponse(BaseModel):
+    id: int
+    approval_type: str
+    status: str
+    requested_from: str
+    requested_reason: str
+    decided_by: str | None = None
+    decided_at: datetime | None = None
+    decision_notes: str | None = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AIFactoryRunResponse(BaseModel):
+    id: int
+    workflow_id: int
+    lead_id: int | None = None
+    opportunity_id: int | None = None
+    status: str
+    approval_status: str
+    requested_by: str
+    provider: str
+    model: str | None = None
+    execution_mode: str
+    requires_human_approval: bool
+    risk_summary: str | None = None
+    input_payload: dict | list | None = None
+    output_payload: dict | list | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+    tasks: list[AIFactoryTaskResponse] = []
+    approvals: list[AIFactoryApprovalResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
+class AIFactoryApprovalDecisionRequest(BaseModel):
+    decision: str = Field(..., pattern="^(approve|reject)$")
+    decision_notes: str | None = Field(None, max_length=5000)
+
+
+class AIFactoryIncidentResponse(BaseModel):
+    id: int
+    run_id: int | None = None
+    severity: str
+    incident_type: str
+    description: str
+    status: str
+    owner: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AIFactoryCostProviderSummaryResponse(BaseModel):
+    provider: str
+    model: str | None = None
+    run_count: int
+    total_tokens: int
+    estimated_cost_usd: float
+
+
+class AIFactoryCostSummaryResponse(BaseModel):
+    total_estimated_cost_usd: float
+    today_estimated_cost_usd: float
+    last_7d_estimated_cost_usd: float
+    run_alert_threshold_usd: float
+    daily_alert_threshold_usd: float
+    open_incident_count: int
+    pricing_configured_models: list[str]
+    by_provider_model: list[AIFactoryCostProviderSummaryResponse]

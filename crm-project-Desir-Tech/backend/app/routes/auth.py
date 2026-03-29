@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.auth import (
     AuthContext,
     assert_crm_user_auth_configured,
+    configured_user_role,
     create_access_token,
     require_user_access,
     verify_user_password,
@@ -25,7 +26,8 @@ async def login(payload: LoginRequest):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
         )
-    token = create_access_token(payload.username)
+    role = configured_user_role(payload.username) or "viewer"
+    token = create_access_token(payload.username, role)
     return LoginResponse(
         access_token=token,
         expires_in_seconds=settings.auth_access_token_exp_minutes * 60,
@@ -34,4 +36,8 @@ async def login(payload: LoginRequest):
 
 @router.get("/me", response_model=AuthUserResponse)
 async def me(auth: AuthContext = Depends(require_user_access)):
-    return AuthUserResponse(username=auth.principal, auth_type=auth.auth_type)
+    return AuthUserResponse(
+        username=auth.principal,
+        auth_type=auth.auth_type,
+        role=auth.role,
+    )

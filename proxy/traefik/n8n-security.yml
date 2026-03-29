@@ -1,0 +1,13 @@
+http:
+  middlewares:
+    n8n-security:
+      headers:
+        contentTypeNosniff: true
+        browserXssFilter: true
+        frameDeny: true
+        forceSTSHeader: true
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        referrerPolicy: strict-origin-when-cross-origin
+        permissionsPolicy: "accelerometer=(),camera=(),geolocation=(),microphone=(),payment=(),usb=()"

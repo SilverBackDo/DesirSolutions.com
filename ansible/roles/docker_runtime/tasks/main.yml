@@ -1,0 +1,23 @@
+---
+- name: Install Docker runtime packages
+  ansible.builtin.package:
+    name:
+      - docker
+      - docker-compose-plugin
+    state: present
+
+- name: Enable and start docker
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Install Python docker SDK for Ansible modules
+  ansible.builtin.pip:
+    name: docker
+    executable: pip3
+
+- name: Ensure external edge network exists
+  community.docker.docker_network:
+    name: "{{ n8n_stack_network }}"
+    state: present
