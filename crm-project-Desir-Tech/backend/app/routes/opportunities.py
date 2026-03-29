@@ -5,7 +5,7 @@ Opportunity and activity management endpoints.
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.auth import require_internal_access
+from app.auth import require_internal_roles
 from app.database import get_db
 from app.models import Opportunity, OpportunityActivity
 from app.schemas import (
@@ -16,7 +16,9 @@ from app.schemas import (
     OpportunityActivityResponse,
 )
 
-router = APIRouter(dependencies=[Depends(require_internal_access)])
+router = APIRouter(
+    dependencies=[Depends(require_internal_roles("admin", "sales", allow_api_key=True))]
+)
 
 
 @router.get("/", response_model=list[OpportunityResponse])

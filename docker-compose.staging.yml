@@ -1,0 +1,299 @@
+services:
+  frontend:
+    build: .
+    container_name: desir-staging-frontend
+    restart: unless-stopped
+    ports:
+      - "${STAGING_HTTP_PORT:-8080}:80"
+      - "${STAGING_HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./certbot-staging/conf:/etc/letsencrypt
+      - ./certbot-staging/www:/var/www/certbot:ro
+      - ./nginx/default.staging.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "--no-check-certificate",
+          "https://127.0.0.1/",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.50"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - desir-staging-net
+
+  crm-frontend:
+    build: ./crm-project-Desir-Tech/frontend
+    container_name: desir-staging-crm-frontend
+    restart: unless-stopped
+    expose:
+      - "80"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1/",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.50"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - desir-staging-net
+
+  backend:
+    build: ./crm-project-Desir-Tech/backend
+    container_name: desir-staging-backend
+    restart: unless-stopped
+    env_file:
+      - .env.staging
+    ports:
+      - "127.0.0.1:${STAGING_BACKEND_PORT:-18000}:8000"
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "1.50"
+    logging:
+      driver: json-file
+      options:
+        max-size: "25m"
+        max-file: "5"
+    networks:
+      - desir-staging-net
+
+  ai-worker:
+    build: ./crm-project-Desir-Tech/backend
+    container_name: desir-staging-ai-worker
+    restart: unless-stopped
+    command: ["python", "-m", "app.worker"]
+    env_file:
+      - .env.staging
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import os; from redis import Redis; Redis.from_url(os.environ.get('AI_FACTORY_REDIS_URL', 'redis://redis:6379/0')).ping()",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "0.75"
+    logging:
+      driver: json-file
+      options:
+        max-size: "25m"
+        max-file: "5"
+    networks:
+      - desir-staging-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: desir-staging-redis
+    restart: unless-stopped
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--appendfsync",
+        "everysec",
+      ]
+    volumes:
+      - redisdata:/data
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - desir-staging-net
+
+  db:
+    image: postgres:16-alpine
+    container_name: desir-staging-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-desir_staging}
+      POSTGRES_USER: ${DB_USER:-desiruser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/sql:/docker-entrypoint-initdb.d:ro
+    expose:
+      - "5432"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-desiruser} -d ${DB_NAME:-desir_staging}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: "1.50"
+    logging:
+      driver: json-file
+      options:
+        max-size: "25m"
+        max-file: "5"
+    networks:
+      - desir-staging-net
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: desir-staging-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-staging-admin@desirsolutions.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?PGADMIN_DEFAULT_PASSWORD is required}
+    ports:
+      - "127.0.0.1:${STAGING_PGADMIN_PORT:-15050}:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - desir-staging-net
+
+  certbot:
+    image: certbot/certbot
+    container_name: desir-staging-certbot
+    restart: unless-stopped
+    volumes:
+      - ./certbot-staging/conf:/etc/letsencrypt
+      - ./certbot-staging/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.140.1
+    container_name: desir-staging-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./telemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+      - ./telemetry/staging-output:/var/lib/otel
+    expose:
+      - "4317"
+      - "4318"
+      - "13133"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - desir-staging-net
+
+volumes:
+  pgdata:
+  pgadmin_data:
+  redisdata:
+
+networks:
+  desir-staging-net:
+    driver: bridge

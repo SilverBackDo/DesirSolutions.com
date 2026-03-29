@@ -3,7 +3,20 @@ SQLAlchemy models for CRM.
 """
 
 from datetime import datetime
-from sqlalchemy import Column, Integer, BigInteger, String, Text, DateTime, Date, Boolean, Numeric, ForeignKey
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    Enum as SQLEnum,
+    ForeignKey,
+    Integer,
+    BigInteger,
+    JSON,
+    Numeric,
+    String,
+    Text,
+)
 
 from app.database import Base
 
@@ -33,6 +46,14 @@ class ContactSubmission(Base):
     environment = Column(String(50), nullable=True)
     timeline = Column(String(255), nullable=True)
     message = Column(Text, nullable=True)
+    website = Column(String(255), nullable=True)
+    converted_to_lead = Column(Boolean, nullable=False, default=False)
+    converted_at = Column(DateTime, nullable=True)
+    utm_source = Column(String(120), nullable=True)
+    utm_medium = Column(String(120), nullable=True)
+    utm_campaign = Column(String(120), nullable=True)
+    ip_address = Column(String(64), nullable=True)
+    user_agent = Column(String(512), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -40,7 +61,22 @@ class Lead(Base):
     __tablename__ = "leads"
 
     id = Column(BigInteger, primary_key=True, index=True)
-    source = Column(String(40), nullable=False, default="website")
+    source = Column(
+        SQLEnum(
+            "website",
+            "referral",
+            "linkedin",
+            "email",
+            "event",
+            "partner",
+            "outbound",
+            "other",
+            "readiness_smoke",
+            name="lead_source",
+        ),
+        nullable=False,
+        default="website",
+    )
     contact_submission_id = Column(BigInteger, ForeignKey(
         "contact_submissions.id"), nullable=True)
     client_id = Column(BigInteger, ForeignKey("clients.id"), nullable=True)
@@ -64,7 +100,21 @@ class Opportunity(Base):
     lead_id = Column(BigInteger, ForeignKey("leads.id"), nullable=True)
     client_id = Column(BigInteger, ForeignKey("clients.id"), nullable=True)
     name = Column(String(255), nullable=False)
-    stage = Column(String(40), nullable=False, default="new")
+    stage = Column(
+        SQLEnum(
+            "new",
+            "qualified",
+            "discovery",
+            "proposal",
+            "negotiation",
+            "won",
+            "lost",
+            "on_hold",
+            name="opportunity_stage",
+        ),
+        nullable=False,
+        default="new",
+    )
     estimated_value = Column(Numeric(12, 2), nullable=False, default=0)
     probability_percent = Column(Numeric(5, 2), nullable=False, default=10)
     expected_close_date = Column(Date, nullable=True)
@@ -101,7 +151,19 @@ class Invoice(Base):
     invoice_number = Column(String(80), nullable=False, unique=True)
     invoice_date = Column(Date, nullable=False)
     due_date = Column(Date, nullable=False)
-    status = Column(String(40), nullable=False, default="draft")
+    status = Column(
+        SQLEnum(
+            "draft",
+            "issued",
+            "partially_paid",
+            "paid",
+            "overdue",
+            "void",
+            name="invoice_status",
+        ),
+        nullable=False,
+        default="draft",
+    )
     subtotal = Column(Numeric(14, 2), nullable=False, default=0)
     tax_amount = Column(Numeric(14, 2), nullable=False, default=0)
     total_amount = Column(Numeric(14, 2), nullable=False, default=0)
@@ -120,8 +182,125 @@ class IncomingPayment(Base):
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
     payment_date = Column(Date, nullable=False)
     amount = Column(Numeric(14, 2), nullable=False)
-    method = Column(String(40), nullable=False)
+    method = Column(
+        SQLEnum(
+            "ach",
+            "wire",
+            "card",
+            "check",
+            "cash",
+            "other",
+            name="payment_method",
+        ),
+        nullable=False,
+    )
     reference_number = Column(String(120), nullable=True)
     processor = Column(String(80), nullable=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class AIFactoryWorkflow(Base):
+    __tablename__ = "ai_workflows"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    workflow_key = Column(String(120), nullable=False, unique=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
+    objective = Column(Text, nullable=False)
+    version = Column(Integer, nullable=False, default=1)
+    status = Column(String(40), nullable=False, default="active")
+    autonomy_level = Column(String(40), nullable=False, default="copilot")
+    primary_provider = Column(String(40), nullable=False, default="openai")
+    default_model = Column(String(120), nullable=True)
+    requires_human_approval = Column(Boolean, nullable=False, default=True)
+    config = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow,
+                        onupdate=datetime.utcnow)
+
+
+class AIFactoryRun(Base):
+    __tablename__ = "ai_runs"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    workflow_id = Column(BigInteger, ForeignKey("ai_workflows.id"), nullable=False)
+    lead_id = Column(BigInteger, ForeignKey("leads.id"), nullable=True)
+    opportunity_id = Column(BigInteger, ForeignKey("opportunities.id"), nullable=True)
+    status = Column(String(40), nullable=False, default="queued")
+    approval_status = Column(String(40), nullable=False, default="pending")
+    requested_by = Column(String(120), nullable=False, default="system")
+    provider = Column(String(40), nullable=False, default="openai")
+    model = Column(String(120), nullable=True)
+    execution_mode = Column(String(40), nullable=False, default="deterministic")
+    requires_human_approval = Column(Boolean, nullable=False, default=True)
+    risk_summary = Column(Text, nullable=True)
+    input_payload = Column(JSON, nullable=True)
+    output_payload = Column(JSON, nullable=True)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow,
+                        onupdate=datetime.utcnow)
+
+
+class AIFactoryTask(Base):
+    __tablename__ = "ai_tasks"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    run_id = Column(BigInteger, ForeignKey("ai_runs.id"), nullable=False)
+    sequence_no = Column(Integer, nullable=False)
+    agent_key = Column(String(120), nullable=False)
+    agent_name = Column(String(255), nullable=False)
+    status = Column(String(40), nullable=False, default="pending")
+    input_payload = Column(JSON, nullable=True)
+    output_payload = Column(JSON, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow,
+                        onupdate=datetime.utcnow)
+
+
+class AIFactoryApproval(Base):
+    __tablename__ = "ai_approvals"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    run_id = Column(BigInteger, ForeignKey("ai_runs.id"), nullable=False)
+    approval_type = Column(String(80), nullable=False)
+    status = Column(String(40), nullable=False, default="pending")
+    requested_from = Column(String(120), nullable=False, default="human_supervisor")
+    requested_reason = Column(Text, nullable=False)
+    decided_by = Column(String(120), nullable=True)
+    decided_at = Column(DateTime, nullable=True)
+    decision_notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class AIFactoryCostLedger(Base):
+    __tablename__ = "ai_cost_ledger"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    run_id = Column(BigInteger, ForeignKey("ai_runs.id"), nullable=False)
+    provider = Column(String(40), nullable=False)
+    model = Column(String(120), nullable=True)
+    prompt_tokens = Column(Integer, nullable=False, default=0)
+    completion_tokens = Column(Integer, nullable=False, default=0)
+    total_tokens = Column(Integer, nullable=False, default=0)
+    estimated_cost_usd = Column(Numeric(12, 6), nullable=False, default=0)
+    cost_metadata = Column("metadata", JSON, nullable=False, default=dict)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class AIFactoryIncident(Base):
+    __tablename__ = "ai_incidents"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    run_id = Column(BigInteger, ForeignKey("ai_runs.id"), nullable=True)
+    severity = Column(String(40), nullable=False, default="medium")
+    incident_type = Column(String(120), nullable=False)
+    description = Column(Text, nullable=False)
+    status = Column(String(40), nullable=False, default="open")
+    owner = Column(String(120), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow,
+                        onupdate=datetime.utcnow)

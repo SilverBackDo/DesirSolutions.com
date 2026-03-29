@@ -1,0 +1,135 @@
+{
+  "name": "CRM Awaiting Approval Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "custom",
+              "cronExpression": "0 0 8 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "2ef0d9fc-468b-4d72-a2fb-799df5925101",
+      "name": "Weekday 8am Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -520,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{($env.DESIR_CRM_BASE_URL || 'https://desirsolutions.com').replace(/\\/$/, '') + '/api/ai-factory/runs?workflow_key=lead_qualification&status=awaiting_approval&limit=25'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{$env.DESIR_CRM_API_KEY}}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a55bca68-4bd1-4af0-bc5a-370f9ac25102",
+      "name": "List Awaiting Approval Runs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -200,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().flatMap((item) => Array.isArray(item.json) ? item.json : [item.json]);\nconst runs = rows.filter((row) => row && typeof row === 'object' && row.id);\nconst count = runs.length;\nconst subject = count > 0\n  ? `CRM approvals waiting: ${count}`\n  : 'CRM approvals waiting: none';\nconst listItems = runs.slice(0, 25).map((run) => {\n  const requestedBy = run.requested_by || 'unknown';\n  const provider = run.provider || 'unknown';\n  const model = run.model || 'default';\n  const leadId = run.lead_id || 'n/a';\n  const createdAt = run.created_at || 'unknown';\n  return `<li>Run #${run.id} for lead #${leadId} requested by ${requestedBy} using ${provider}/${model} at ${createdAt}</li>`;\n});\nconst html = count > 0\n  ? `<p>${count} lead qualification run(s) are waiting for human approval.</p><ul>${listItems.join('')}</ul><p>Review them in the CRM AI Factory queue.</p>`\n  : '<p>No AI Factory qualification runs are waiting for approval.</p>';\nconst text = count > 0\n  ? `${count} lead qualification run(s) are waiting for approval. Review the CRM AI Factory queue.`\n  : 'No AI Factory qualification runs are waiting for approval.';\nreturn [{ json: { count, subject, html, text } }];"
+      },
+      "id": "f6e74417-df08-4a2b-9580-b5bd52935103",
+      "name": "Build Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.N8N_SMTP_SENDER || 'n8n@desirsolutions.com'}}",
+        "toEmail": "={{$env.DESIR_APPROVAL_DIGEST_TO}}",
+        "subject": "={{$json.subject}}",
+        "emailType": "html",
+        "message": "={{$json.html}}",
+        "options": {}
+      },
+      "id": "57cb1dd4-96d8-4d1c-b054-f698f3d45104",
+      "name": "Send Approval Digest",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        420,
+        260
+      ],
+      "credentials": {
+        "smtp": {
+          "name": "Desir Solutions SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Weekday 8am Trigger": {
+      "main": [
+        [
+          {
+            "node": "List Awaiting Approval Runs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Awaiting Approval Runs": {
+      "main": [
+        [
+          {
+            "node": "Build Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Digest": {
+      "main": [
+        [
+          {
+            "node": "Send Approval Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "27542722-0f22-4b62-ac14-499a34d67105",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "id": "crm-awaiting-approval-digest",
+  "tags": []
+}

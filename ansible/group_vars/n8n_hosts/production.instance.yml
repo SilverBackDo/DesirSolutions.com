@@ -1,0 +1,10 @@
+n8n_stack_root: /opt/desir/n8n-stack
+n8n_domain: n8n.desirsolutions.com
+n8n_editor_base_url: https://n8n.desirsolutions.com/
+n8n_webhook_url: https://n8n.desirsolutions.com/
+n8n_healthcheck_url: https://n8n.desirsolutions.com/healthz
+n8n_timezone: America/Los_Angeles
+n8n_backup_root: /var/backups/desir/n8n
+n8n_stack_network: platform_edge
+desir_crm_base_url: https://desirsolutions.com
+desir_approval_digest_to: contact@desirsolutions.com
