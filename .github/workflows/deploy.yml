@@ -91,8 +91,8 @@ jobs:
       - name: Check deploy prerequisites
         id: deploy_prereqs
         env:
-          OCI_VM_HOST: ${{ secrets.OCI_VM_HOST }}
-          OCI_VM_USER: ${{ secrets.OCI_VM_USER }}
+          OCI_VM_HOST: ${{ vars.OCI_VM_HOST || secrets.OCI_VM_HOST }}
+          OCI_VM_USER: ${{ vars.OCI_VM_USER || secrets.OCI_VM_USER }}
           OCI_VM_SSH_KEY: ${{ secrets.OCI_VM_SSH_KEY }}
         run: |
           set -euo pipefail
@@ -128,7 +128,7 @@ jobs:
       - name: Prepare SSH trust
         if: steps.deploy_prereqs.outputs.ready == 'true'
         env:
-          OCI_VM_HOST: ${{ secrets.OCI_VM_HOST }}
+          OCI_VM_HOST: ${{ vars.OCI_VM_HOST || secrets.OCI_VM_HOST }}
           OCI_VM_SSH_KEY: ${{ secrets.OCI_VM_SSH_KEY }}
           OCI_VM_HOST_FINGERPRINT: ${{ secrets.OCI_VM_HOST_FINGERPRINT }}
         run: |
@@ -148,8 +148,8 @@ jobs:
       - name: Deploy website on OCI VM
         if: steps.deploy_prereqs.outputs.ready == 'true'
         env:
-          OCI_VM_HOST: ${{ secrets.OCI_VM_HOST }}
-          OCI_VM_USER: ${{ secrets.OCI_VM_USER }}
+          OCI_VM_HOST: ${{ vars.OCI_VM_HOST || secrets.OCI_VM_HOST }}
+          OCI_VM_USER: ${{ vars.OCI_VM_USER || secrets.OCI_VM_USER }}
           WEBSITE_DEPLOY_WORKDIR: ${{ vars.WEBSITE_DEPLOY_WORKDIR || '/opt/desir/DesirSolutions.com' }}
           WEBSITE_PUBLIC_BASE_URL: ${{ vars.WEBSITE_PUBLIC_BASE_URL || 'http://127.0.0.1' }}
           WEBSITE_PUBLIC_HOST: ${{ vars.WEBSITE_PUBLIC_HOST || 'desirsolutions.com' }}
