@@ -1,4 +1,4 @@
-name: Publish Desir Solutions website image
+name: Publish and deploy Desir Solutions website image
 
 on:
   workflow_dispatch:
@@ -22,6 +22,9 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    outputs:
+      owner: ${{ steps.image.outputs.owner }}
+      tag: ${{ steps.image.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,4 +79,133 @@ jobs:
             echo 'docker compose -f docker-compose.deploy.yml up -d'
             echo 'docker inspect -f "{{.State.Health.Status}}" desirsolutions-website'
             echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: publish
+    steps:
+      - name: Check deploy prerequisites
+        id: deploy_prereqs
+        env:
+          OCI_VM_HOST: ${{ secrets.OCI_VM_HOST }}
+          OCI_VM_USER: ${{ secrets.OCI_VM_USER }}
+          OCI_VM_SSH_KEY: ${{ secrets.OCI_VM_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for var in OCI_VM_HOST OCI_VM_USER OCI_VM_SSH_KEY; do
+            if [ -z "${!var:-}" ]; then
+              missing+=("$var")
+            fi
+          done
+
+          if [ "${#missing[@]}" -eq 0 ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          joined_missing=$(printf '%s, ' "${missing[@]}")
+          joined_missing=${joined_missing%, }
+
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "::error::Missing required deploy secrets: ${joined_missing}"
+            exit 1
+          fi
+
+          {
+            echo "## Website Deploy Skipped"
+            echo
+            echo "Required deploy secrets are not configured for this repository."
+            echo
+            echo "Missing secrets: \`${joined_missing}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "ready=false" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare SSH trust
+        if: steps.deploy_prereqs.outputs.ready == 'true'
+        env:
+          OCI_VM_HOST: ${{ secrets.OCI_VM_HOST }}
+          OCI_VM_SSH_KEY: ${{ secrets.OCI_VM_SSH_KEY }}
+          OCI_VM_HOST_FINGERPRINT: ${{ secrets.OCI_VM_HOST_FINGERPRINT }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$OCI_VM_SSH_KEY" > "$HOME/.ssh/oci_vm_key"
+          chmod 600 "$HOME/.ssh/oci_vm_key"
+
+          ssh-keyscan -H "$OCI_VM_HOST" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+          if [ -n "${OCI_VM_HOST_FINGERPRINT:-}" ]; then
+            ssh-keygen -lf "$HOME/.ssh/known_hosts" > "$RUNNER_TEMP/known_hosts.fingerprints"
+            grep -F "$OCI_VM_HOST_FINGERPRINT" "$RUNNER_TEMP/known_hosts.fingerprints" >/dev/null
+          fi
+
+      - name: Deploy website on OCI VM
+        if: steps.deploy_prereqs.outputs.ready == 'true'
+        env:
+          OCI_VM_HOST: ${{ secrets.OCI_VM_HOST }}
+          OCI_VM_USER: ${{ secrets.OCI_VM_USER }}
+          WEBSITE_DEPLOY_WORKDIR: ${{ vars.WEBSITE_DEPLOY_WORKDIR || '/opt/desir/DesirSolutions.com' }}
+          WEBSITE_PUBLIC_BASE_URL: ${{ vars.WEBSITE_PUBLIC_BASE_URL || 'http://127.0.0.1' }}
+          WEBSITE_PUBLIC_HOST: ${{ vars.WEBSITE_PUBLIC_HOST || 'desirsolutions.com' }}
+          WEBSITE_COMPOSE_FILE: ${{ vars.WEBSITE_COMPOSE_FILE || 'docker-compose.deploy.yml' }}
+          DEPLOY_REF: ${{ github.event.inputs.git_ref || github.ref_name }}
+          WEBSITE_IMAGE: ghcr.io/${{ needs.publish.outputs.owner }}/desirsolutions-website:${{ needs.publish.outputs.tag }}
+        run: |
+          ssh \
+            -i "$HOME/.ssh/oci_vm_key" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "${OCI_VM_USER}@${OCI_VM_HOST}" \
+            "WEBSITE_DEPLOY_WORKDIR='${WEBSITE_DEPLOY_WORKDIR}' WEBSITE_PUBLIC_BASE_URL='${WEBSITE_PUBLIC_BASE_URL}' WEBSITE_PUBLIC_HOST='${WEBSITE_PUBLIC_HOST}' WEBSITE_COMPOSE_FILE='${WEBSITE_COMPOSE_FILE}' DEPLOY_REF='${DEPLOY_REF}' WEBSITE_IMAGE='${WEBSITE_IMAGE}' bash -s" <<'EOF'
+            set -euo pipefail
+
+            deploy_root="${WEBSITE_DEPLOY_WORKDIR:?WEBSITE_DEPLOY_WORKDIR is required}"
+            deploy_ref="${DEPLOY_REF:?DEPLOY_REF is required}"
+            website_image="${WEBSITE_IMAGE:?WEBSITE_IMAGE is required}"
+            website_public_base_url="${WEBSITE_PUBLIC_BASE_URL:?WEBSITE_PUBLIC_BASE_URL is required}"
+            website_public_host="${WEBSITE_PUBLIC_HOST:?WEBSITE_PUBLIC_HOST is required}"
+            website_compose_file="${WEBSITE_COMPOSE_FILE:?WEBSITE_COMPOSE_FILE is required}"
+
+            sudo install -d -m 0755 "$(dirname "$deploy_root")"
+            if [ ! -d "$deploy_root/.git" ]; then
+              git clone https://github.com/SilverBackDo/DesirSolutions.com.git "$deploy_root"
+            fi
+
+            git -C "$deploy_root" fetch --all --prune
+            git -C "$deploy_root" checkout "$deploy_ref"
+            git -C "$deploy_root" pull --ff-only origin "$deploy_ref"
+
+            cd "$deploy_root/website"
+
+            if docker compose version >/dev/null 2>&1; then
+              compose_cmd=(docker compose -f "$website_compose_file")
+            else
+              compose_cmd=(docker-compose -f "$website_compose_file")
+            fi
+
+            export DESIR_WEBSITE_IMAGE="$website_image"
+            "${compose_cmd[@]}" config >/dev/null
+            "${compose_cmd[@]}" pull website
+            "${compose_cmd[@]}" up -d website
+
+            curl --fail --show-error --silent \
+              -H "Host: ${website_public_host}" \
+              "${website_public_base_url%/}/" >/dev/null
+          EOF
+
+      - name: Publish deploy summary
+        if: steps.deploy_prereqs.outputs.ready == 'true'
+        env:
+          WEBSITE_PUBLIC_URL: ${{ vars.WEBSITE_PUBLIC_URL || 'https://desirsolutions.com/' }}
+          WEBSITE_IMAGE: ghcr.io/${{ needs.publish.outputs.owner }}/desirsolutions-website:${{ needs.publish.outputs.tag }}
+        run: |
+          {
+            echo "## Website Deployed"
+            echo
+            echo "- Image: \`${WEBSITE_IMAGE}\`"
+            echo "- Route: \`${WEBSITE_PUBLIC_URL}\`"
           } >> "$GITHUB_STEP_SUMMARY"

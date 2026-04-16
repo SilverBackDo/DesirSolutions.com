@@ -3,10 +3,15 @@ import { useEffect } from 'react'
 import { Layout } from './components/Layout'
 import { AboutPage } from './pages/AboutPage'
 import { AssessmentPage } from './pages/AssessmentPage'
+import { CandidatesPage } from './pages/CandidatesPage'
+import { CareersPage } from './pages/CareersPage'
 import { ContactPage } from './pages/ContactPage'
+import { EmployersPage } from './pages/EmployersPage'
+import { EngagementPage } from './pages/EngagementPage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ServicesPage } from './pages/ServicesPage'
+import { TermsPrivacyPage } from './pages/TermsPrivacyPage'
 import { TrustPage } from './pages/TrustPage'
 
 function ScrollToTop() {
@@ -28,8 +33,13 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="/assessment" element={<AssessmentPage />} />
           <Route path="/services" element={<ServicesPage />} />
+          <Route path="/employers" element={<EmployersPage />} />
+          <Route path="/candidates" element={<CandidatesPage />} />
+          <Route path="/careers" element={<CareersPage />} />
+          <Route path="/engagement" element={<EngagementPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/trust" element={<TrustPage />} />
+          <Route path="/terms-privacy" element={<TermsPrivacyPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
