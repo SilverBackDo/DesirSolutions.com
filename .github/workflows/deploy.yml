@@ -153,7 +153,6 @@ jobs:
           WEBSITE_DEPLOY_WORKDIR: ${{ vars.WEBSITE_DEPLOY_WORKDIR || '/opt/desir/DesirSolutions.com' }}
           WEBSITE_PUBLIC_BASE_URL: ${{ vars.WEBSITE_PUBLIC_BASE_URL || 'http://127.0.0.1' }}
           WEBSITE_PUBLIC_HOST: ${{ vars.WEBSITE_PUBLIC_HOST || 'desirsolutions.com' }}
-          WEBSITE_COMPOSE_FILE: ${{ vars.WEBSITE_COMPOSE_FILE || 'docker-compose.deploy.yml' }}
           DEPLOY_REF: ${{ github.event.inputs.git_ref || github.ref_name }}
           WEBSITE_IMAGE: ghcr.io/${{ needs.publish.outputs.owner }}/desirsolutions-website:${{ needs.publish.outputs.tag }}
         run: |
@@ -163,7 +162,7 @@ jobs:
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             "${OCI_VM_USER}@${OCI_VM_HOST}" \
-            "WEBSITE_DEPLOY_WORKDIR='${WEBSITE_DEPLOY_WORKDIR}' WEBSITE_PUBLIC_BASE_URL='${WEBSITE_PUBLIC_BASE_URL}' WEBSITE_PUBLIC_HOST='${WEBSITE_PUBLIC_HOST}' WEBSITE_COMPOSE_FILE='${WEBSITE_COMPOSE_FILE}' DEPLOY_REF='${DEPLOY_REF}' WEBSITE_IMAGE='${WEBSITE_IMAGE}' bash -s" <<'EOF'
+            "WEBSITE_DEPLOY_WORKDIR='${WEBSITE_DEPLOY_WORKDIR}' WEBSITE_PUBLIC_BASE_URL='${WEBSITE_PUBLIC_BASE_URL}' WEBSITE_PUBLIC_HOST='${WEBSITE_PUBLIC_HOST}' DEPLOY_REF='${DEPLOY_REF}' WEBSITE_IMAGE='${WEBSITE_IMAGE}' bash -s" <<'EOF'
             set -euo pipefail
 
             deploy_root="${WEBSITE_DEPLOY_WORKDIR:?WEBSITE_DEPLOY_WORKDIR is required}"
@@ -171,9 +170,11 @@ jobs:
             website_image="${WEBSITE_IMAGE:?WEBSITE_IMAGE is required}"
             website_public_base_url="${WEBSITE_PUBLIC_BASE_URL:?WEBSITE_PUBLIC_BASE_URL is required}"
             website_public_host="${WEBSITE_PUBLIC_HOST:?WEBSITE_PUBLIC_HOST is required}"
-            website_compose_file="${WEBSITE_COMPOSE_FILE:?WEBSITE_COMPOSE_FILE is required}"
             current_user="$(id -un)"
             current_group="$(id -gn)"
+            platform_root="/srv/platform"
+            platform_env_file="$platform_root/.env"
+            platform_script="$deploy_root/platform/scripts/deploy-platform.sh"
 
             sudo install -d -m 0755 "$(dirname "$deploy_root")"
             sudo install -d -m 0755 "$deploy_root"
@@ -186,30 +187,29 @@ jobs:
             git -C "$deploy_root" checkout "$deploy_ref"
             git -C "$deploy_root" pull --ff-only origin "$deploy_ref"
 
-            cd "$deploy_root/website"
-
-            if docker compose version >/dev/null 2>&1; then
-              compose_cmd=(docker compose -f "$website_compose_file")
-            else
-              compose_cmd=(docker-compose -f "$website_compose_file")
+            if [ ! -f "$platform_script" ]; then
+              echo "Platform deploy script not found: $platform_script" >&2
+              exit 1
             fi
 
-            export DESIR_WEBSITE_IMAGE="$website_image"
-            "${compose_cmd[@]}" config >/dev/null
-            "${compose_cmd[@]}" pull website
-            "${compose_cmd[@]}" up -d website
+            DESIRSOLUTIONS_IMAGE="$website_image" \
+            PLATFORM_ROOT="$platform_root" \
+            PLATFORM_ENV_FILE="$platform_env_file" \
+              bash "$platform_script"
 
             for attempt in $(seq 1 20); do
-              if curl --fail --show-error --silent \
+              status=$(sudo docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' desirsolutions-site 2>/dev/null || true)
+              if [ "$status" = "healthy" ] || [ "$status" = "running" ]; then
+                curl --fail --show-error --silent \
                 -H "Host: ${website_public_host}" \
-                "${website_public_base_url%/}/" >/dev/null; then
+                "${website_public_base_url%/}/" >/dev/null
                 exit 0
               fi
               sleep 3
             done
 
-            "${compose_cmd[@]}" ps website || true
-            "${compose_cmd[@]}" logs --tail=80 website || true
+            sudo docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' || true
+            sudo docker logs --tail=80 desirsolutions-site || true
             exit 1
           EOF
 
