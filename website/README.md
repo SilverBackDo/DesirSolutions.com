@@ -86,3 +86,7 @@ For launch, one of these must be true:
 - `/api/contact` is reverse proxied to the CRM backend
 - `VITE_CONTACT_ENDPOINT` is set to a live intake endpoint at build time
 - direct email fallback is accepted as the live intake path
+
+## Launch proof
+
+Use `../scripts/collect-public-launch-proof.sh` to capture DNS, SSL, health, and optional live contact-intake proof as one dated report once the public domain is expected to be ready.
