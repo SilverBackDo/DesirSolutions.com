@@ -19,6 +19,9 @@ permissions:
   contents: read
   packages: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -82,7 +85,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, desir-prod-deploy]
     needs: publish
     steps:
       - name: Check deploy prerequisites
