@@ -1,79 +1,116 @@
 import { Button } from '../components/Button'
+import { ClosingCta } from '../components/ClosingCta'
 import { SectionIntro } from '../components/SectionIntro'
 import { Seo } from '../components/Seo'
-import { coreMetrics, faqs, founderProof, pains, services } from '../data/siteContent'
+import { ServiceIcon } from '../components/ServiceIcon'
+import {
+  coreMetrics,
+  enterpriseProof,
+  faqs,
+  industrySectors,
+  pains,
+  practiceAreas,
+  services,
+  staffingSpecialties,
+} from '../data/siteContent'
+
+const heroSignals = ['Enterprise buyers', 'Hiring managers', 'Operations leaders']
 
 export function HomePage() {
   return (
     <>
       <Seo
-        title="Infrastructure & DevOps Consulting"
-        description="Founder-led infrastructure modernization consulting for lean IT teams managing Linux, VMware, cloud, and automation backlog."
+        title="Enterprise Infrastructure, Automation, Managed IT & IT Staffing"
+        description="Enterprise infrastructure, AI automation, managed IT expert solutions, and IT staff placement services for organizations that need operational momentum."
         path="/"
       />
 
       <main id="main-content">
-        <section className="shell grid gap-10 py-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-20">
-          <div className="space-y-7">
-            <span className="eyebrow">For lean IT teams under delivery pressure</span>
-            <div className="space-y-5">
-              <h1 className="max-w-3xl font-display text-5xl font-semibold leading-tight tracking-tight text-brand-950 sm:text-6xl">
-                Infrastructure modernization for understaffed teams running hybrid environments.
-              </h1>
-              <p className="max-w-2xl text-lg leading-8 text-slate-600">
-                Desir Solutions helps 20 to 500 employee companies reduce risk across Linux,
-                VMware, and cloud-connected infrastructure, turn manual delivery into a defined
-                operating model, and move from backlog to a concrete plan quickly.
-              </p>
+        <section className="hero-stage">
+          <div className="shell relative grid gap-10 py-16 lg:grid-cols-[1.06fr_0.94fr] lg:items-center lg:py-24">
+            <div className="space-y-7 reveal">
+              <span className="eyebrow">Desir Solutions LLC</span>
+              <div className="space-y-5">
+                <h1 className="max-w-4xl font-display text-5xl font-semibold leading-tight tracking-tight text-brand-950 sm:text-6xl">
+                  Enterprise infrastructure,{' '}
+                  <span className="bg-[linear-gradient(135deg,#1f6f95_0%,#19a974_100%)] bg-clip-text text-transparent">
+                    AI automation
+                  </span>
+                  , managed IT, and expert IT staffing built to move delivery forward.
+                </h1>
+                <p className="max-w-3xl text-lg leading-8 text-slate-600">
+                  Desir Solutions supports enterprise technology teams with structured delivery
+                  lanes for infrastructure modernization, intelligent automation, operational
+                  support, and specialized staff placement. The public experience is built for
+                  serious buyers who need capability, trust, and execution clarity.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button to="/contact">Talk to our team</Button>
+                <Button to="/services" variant="secondary">
+                  Explore service towers
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                {heroSignals.map((item) => (
+                  <span key={item} className="capability-badge">
+                    {item}
+                  </span>
+                ))}
+              </div>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button to="/assessment">See the assessment offer</Button>
-              <Button to="/services" variant="secondary">
-                Review services
-              </Button>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              {['Linux / RHEL', 'VMware', 'Terraform', 'Ansible', 'Hybrid Cloud'].map((item) => (
-                <span key={item} className="pill">
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="panel overflow-hidden">
-            <div className="border-b border-slate-200/70 bg-brand-950 px-6 py-5 text-white">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/75">
-                Flagship first engagement
-              </p>
-              <p className="mt-3 font-display text-3xl font-semibold">
-                Infrastructure Assessment
-              </p>
-            </div>
-            <div className="space-y-6 p-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl bg-sand-50 p-4">
-                  <p className="text-sm text-slate-500">Timeline</p>
-                  <p className="mt-2 text-2xl font-semibold text-brand-950">10 business days</p>
+            <div className="grid gap-5 reveal delay-2">
+              <div className="panel-dark p-7">
+                <div className="space-y-4">
+                  <p className="text-sm font-semibold uppercase tracking-[0.24em] text-white/70">
+                    Enterprise service towers
+                  </p>
+                  <h2 className="font-display text-3xl font-semibold tracking-tight">
+                    One public platform. Four high-value delivery lanes.
+                  </h2>
                 </div>
-                <div className="rounded-3xl bg-sand-50 p-4">
-                  <p className="text-sm text-slate-500">Fee</p>
-                  <p className="mt-2 text-2xl font-semibold text-brand-950">$4,500 fixed</p>
+                <div className="mt-6 grid gap-4">
+                  {services.map((service) => (
+                    <div
+                      key={service.eyebrow}
+                      className="interactive-card rounded-[26px] border border-white/10 bg-white/10 p-4"
+                    >
+                      <div className="flex items-start gap-4">
+                        <ServiceIcon name={service.icon} theme="dark" />
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100">
+                            {service.eyebrow}
+                          </p>
+                          <p className="text-base font-semibold text-white">{service.name}</p>
+                          <p className="text-sm leading-6 text-white/75">{service.engagement}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <ul className="prose-list">
-                <li>Current-state operating review across infrastructure and delivery flow.</li>
-                <li>Ranked risk register with quick wins and phase-two blockers.</li>
-                <li>30-day action plan designed for a real buyer decision.</li>
-                <li>Clear conversion path into a sprint or monthly advisory engagement.</li>
-              </ul>
-
-              <Button className="w-full" to="/contact">
-                Request a conversation
-              </Button>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="signal-card interactive-card metric-card reveal delay-2">
+                  <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
+                    Buying routes
+                  </p>
+                  <p className="mt-3 text-2xl font-semibold text-brand-950">
+                    Assessment, delivery, managed support, staffing
+                  </p>
+                </div>
+                <div className="signal-card interactive-card metric-card reveal delay-3">
+                  <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
+                    Staffing focus
+                  </p>
+                  <p className="mt-3 text-2xl font-semibold text-brand-950">
+                    Contract engineering to contract-to-hire
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -81,7 +118,7 @@ export function HomePage() {
         <section className="shell pb-12">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {coreMetrics.map((metric) => (
-              <div key={metric.label} className="panel p-6">
+              <div key={metric.label} className="signal-card interactive-card metric-card reveal">
                 <p className="font-display text-3xl font-semibold text-brand-950">{metric.value}</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{metric.label}</p>
               </div>
@@ -90,16 +127,16 @@ export function HomePage() {
         </section>
 
         <section className="shell py-12">
-          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
             <SectionIntro
-              eyebrow="Why buyers call"
-              title="Most teams do not need another abstract transformation deck."
-              copy="They need a senior operator to identify what is actually slowing delivery, what is risky, and what should happen first."
+              eyebrow="Why organizations engage"
+              title="Enterprise teams rarely have just one problem to solve."
+              copy="The real challenge usually lives at the intersection of infrastructure complexity, automation gaps, operational pressure, and talent constraints."
             />
 
-            <div className="grid gap-4">
+            <div className="grid gap-4 md:grid-cols-2">
               {pains.map((pain) => (
-                <article key={pain} className="panel p-6">
+                <article key={pain} className="panel interactive-card p-6 reveal">
                   <p className="text-base leading-7 text-slate-700">{pain}</p>
                 </article>
               ))}
@@ -109,21 +146,24 @@ export function HomePage() {
 
         <section className="shell py-12">
           <SectionIntro
-            eyebrow="Core services"
-            title="Built for the fastest path to revenue and delivery confidence."
-            copy="Desir Solutions leads with a defined assessment, then expands into sprint delivery or fractional leadership only when the buyer has a justified next step."
+            align="center"
+            eyebrow="Service towers"
+            title="Structured to cover infrastructure, automation, managed support, and staffing without overlap or clutter."
+            copy="Each service tower is clear enough for enterprise buyers to understand quickly and flexible enough to support blended engagements when operations require it."
           />
 
-          <div className="mt-8 grid gap-5 lg:grid-cols-3">
+          <div className="mt-8 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
             {services.map((service) => (
-              <article key={service.name} className="panel flex h-full flex-col p-6">
+              <article key={service.name} className="panel interactive-card tower-card flex h-full flex-col p-6 reveal">
                 <div className="space-y-3">
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-700">
-                    {service.price}
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="eyebrow">{service.eyebrow}</span>
+                    <ServiceIcon name={service.icon} />
+                  </div>
+                  <h2 className="font-display text-2xl font-semibold text-brand-950">{service.name}</h2>
+                  <p className="rounded-full bg-accent-100/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-accent-600">
+                    {service.engagement}
                   </p>
-                  <h3 className="font-display text-2xl font-semibold text-brand-950">
-                    {service.name}
-                  </h3>
                   <p className="text-sm leading-7 text-slate-600">{service.summary}</p>
                 </div>
                 <ul className="prose-list mt-5">
@@ -137,21 +177,83 @@ export function HomePage() {
         </section>
 
         <section className="shell py-12">
-          <div className="panel grid gap-8 overflow-hidden bg-brand-950 p-8 text-white lg:grid-cols-[1fr_1fr] lg:p-10">
+          <div className="panel grid gap-8 p-8 lg:grid-cols-[0.9fr_1.1fr] lg:p-10">
+            <SectionIntro
+              eyebrow="Core platform model"
+              title="An enterprise solutions company with clear lanes and operational discipline."
+              copy="Desir Solutions is positioned to support leadership conversations, technical execution, operational continuity, and specialized staffing requests through a coherent public platform."
+            />
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {practiceAreas.map((area) => (
+                <article
+                  key={area.title}
+                  className="interactive-card rounded-[24px] border border-slate-200/80 bg-sand-50/75 p-5"
+                >
+                  <h3 className="font-display text-2xl font-semibold text-brand-950">{area.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{area.detail}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="shell py-12">
+          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <SectionIntro
+              eyebrow="IT expert placement"
+              title="Specialized staffing support for real enterprise delivery pressure."
+              copy="The staffing pillar is built for hiring managers who need focused technical coverage now, from contract engineering and project augmentation through contract-to-hire support."
+            />
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {staffingSpecialties.map((specialty) => (
+                <article key={specialty.title} className="panel interactive-card p-6">
+                  <h3 className="font-display text-2xl font-semibold text-brand-950">
+                    {specialty.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{specialty.detail}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="shell py-12">
+          <SectionIntro
+            eyebrow="Industry sectors"
+            title="Built for enterprise teams operating in high-pressure, high-change environments."
+            copy="The public positioning stays broad enough to support different buyer types while still feeling credible for enterprise operations, platform, and delivery leaders."
+          />
+
+          <div className="mt-8 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
+            {industrySectors.map((sector) => (
+              <article key={sector.title} className="panel interactive-card p-6">
+                <h3 className="font-display text-2xl font-semibold text-brand-950">{sector.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{sector.detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="shell py-12">
+          <div className="panel-dark grid gap-8 p-8 lg:grid-cols-[0.95fr_1.05fr] lg:p-10">
             <div className="space-y-4">
-              <span className="eyebrow border-white/15 bg-white/10 text-white">Founder-led credibility</span>
+              <span className="eyebrow eyebrow-dark">Trust and credibility</span>
               <h2 className="font-display text-4xl font-semibold tracking-tight">
-                The buyer works directly with senior technical delivery, not a staffing layer.
+                Enterprise-ready messaging backed by real workflow discipline.
               </h2>
               <p className="max-w-xl text-base leading-7 text-white/80">
-                Desir Solutions is structured for direct operator access, fast qualification, and
-                practical infrastructure work. That keeps the first deal easier to close and the
-                delivery model easier to trust.
+                The website now communicates a full solutions platform with structured intake,
+                documented service lanes, and human-governed commercial and staffing decisions.
               </p>
             </div>
-            <div className="space-y-4">
-              {founderProof.map((item) => (
-                <div key={item} className="rounded-[24px] border border-white/10 bg-white/10 p-5">
+            <div className="grid gap-4">
+              {enterpriseProof.map((item) => (
+                <div
+                  key={item}
+                  className="interactive-card rounded-[24px] border border-white/10 bg-white/10 p-5"
+                >
                   <p className="text-sm leading-7 text-white/85">{item}</p>
                 </div>
               ))}
@@ -162,19 +264,21 @@ export function HomePage() {
         <section className="shell py-12">
           <SectionIntro
             eyebrow="Common questions"
-            title="Designed to convert without a long sales cycle."
-            copy="The site, the offer, and the engagement model are intentionally simple so the first buyer can move from inquiry to paid work without unnecessary friction."
+            title="Clear enough for enterprise buyers, hiring managers, and technical leaders to move quickly."
+            copy="The public experience is designed to support fast decision-making without sounding generic, sales-heavy, or overbuilt."
           />
 
           <div className="mt-8 grid gap-4">
             {faqs.map((faq) => (
-              <article key={faq.question} className="panel p-6">
+              <article key={faq.question} className="panel interactive-card p-6">
                 <h3 className="font-display text-xl font-semibold text-brand-950">{faq.question}</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">{faq.answer}</p>
               </article>
             ))}
           </div>
         </section>
+
+        <ClosingCta />
       </main>
     </>
   )

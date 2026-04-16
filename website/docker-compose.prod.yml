@@ -1,7 +1,9 @@
 services:
   website:
-    image: "${DESIR_WEBSITE_IMAGE:-ghcr.io/silverbackdo/desirsolutions-website:latest}"
-    pull_policy: always
+    image: "${DESIR_WEBSITE_IMAGE:-desirsolutions-website:local}"
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: desirsolutions-website
     init: true
     restart: unless-stopped

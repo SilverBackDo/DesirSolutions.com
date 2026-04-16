@@ -5,16 +5,16 @@ import { Seo } from '../components/Seo'
 import { assessmentTimeline } from '../data/siteContent'
 
 const deliverables = [
-  'Assessment summary written for technical and business review',
-  'Ranked risk register with quick wins and dependencies',
-  '30-day action plan with ownership guidance',
-  'Recommended phase-two scope with pricing direction',
+  'Executive-ready assessment summary written for business and technical stakeholders',
+  'Ranked risk register with quick wins, dependencies, and operating implications',
+  '30-day action plan with ownership guidance and priority sequencing',
+  'Recommended next-step path into project delivery, managed support, staffing, or a blended model',
 ]
 
 const goodFit = [
-  'Hybrid environments with Linux, VMware, or cloud infrastructure pressure',
-  'IT teams that are overloaded and need an outside operator to sort priorities fast',
-  'Buyers who need a real starting point before funding a larger implementation effort',
+  'Enterprise teams managing Linux, VMware, cloud, automation, or hybrid infrastructure pressure',
+  'Leaders who need an organized decision package before launching a larger modernization or staffing effort',
+  'Operations groups that need technical clarity, delivery sequencing, and practical next-step guidance quickly',
 ]
 
 export function AssessmentPage() {
@@ -22,29 +22,30 @@ export function AssessmentPage() {
     <>
       <Seo
         title="Infrastructure Assessment"
-        description="A fixed-fee 10-business-day infrastructure assessment for Linux, VMware, cloud, and automation backlog."
+        description="A defined 10-business-day infrastructure and automation assessment for enterprise teams that need a practical decision package."
         path="/assessment"
       />
 
       <main id="main-content" className="shell py-14 lg:py-20">
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           <div className="space-y-6">
-            <span className="eyebrow">Flagship first offer</span>
+            <span className="eyebrow">Defined entry engagement</span>
             <div className="space-y-4">
               <h1 className="max-w-3xl font-display text-5xl font-semibold tracking-tight text-brand-950 sm:text-6xl">
                 Infrastructure Stability &amp; Automation Assessment
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-slate-600">
-                A short engagement for buyers who need a usable decision package, not another vague
-                discovery cycle. The output is a prioritized action plan and a clear recommendation
-                for what should happen next.
+                This engagement gives enterprise buyers a tight, practical review of infrastructure
+                conditions, automation opportunities, operational friction, and the most justified
+                next move. It is built to create clarity for leadership, not just more discovery
+                notes.
               </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button to="/contact">Start the assessment</Button>
+              <Button to="/contact">Schedule the assessment</Button>
               <Button to="/services" variant="secondary">
-                Compare service paths
+                Compare service towers
               </Button>
             </div>
           </div>
@@ -52,7 +53,7 @@ export function AssessmentPage() {
           <div className="panel p-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-3xl bg-sand-50 p-5">
-                <p className="text-sm text-slate-500">Fixed fee</p>
+                <p className="text-sm text-slate-500">Investment</p>
                 <p className="mt-2 text-3xl font-semibold text-brand-950">$4,500</p>
               </div>
               <div className="rounded-3xl bg-sand-50 p-5">
@@ -71,8 +72,8 @@ export function AssessmentPage() {
         <section className="py-14">
           <SectionIntro
             eyebrow="What happens"
-            title="A tight engagement structure that leads to a decision."
-            copy="The assessment is designed to reduce buyer hesitation. It creates something worth paying for even if the client decides to execute internally after the review."
+            title="A short, organized engagement structure that leads to a business decision."
+            copy="The output is designed to serve leadership review, technical planning, and execution sequencing so the engagement feels substantial even before a larger project begins."
           />
 
           <div className="mt-8 grid gap-5 lg:grid-cols-4">
@@ -92,7 +93,7 @@ export function AssessmentPage() {
 
         <section className="grid gap-8 py-6 lg:grid-cols-[1fr_1fr]">
           <div className="panel p-7">
-            <h2 className="font-display text-3xl font-semibold text-brand-950">Good fit</h2>
+            <h2 className="font-display text-3xl font-semibold text-brand-950">Best fit</h2>
             <ul className="prose-list mt-5">
               {goodFit.map((item) => (
                 <li key={item}>{item}</li>
@@ -102,14 +103,14 @@ export function AssessmentPage() {
           <div className="panel p-7">
             <h2 className="font-display text-3xl font-semibold text-brand-950">Commercial logic</h2>
             <ul className="prose-list mt-5">
-              <li>Low-friction paid entry point instead of unpaid architecture consulting.</li>
-              <li>Short enough to fund quickly, structured enough to create real trust.</li>
-              <li>Natural conversion path into sprint implementation or fractional advisory support.</li>
+              <li>Creates fast clarity for enterprise stakeholders without forcing a large project before the picture is ready.</li>
+              <li>Produces a usable leadership package that can feed modernization, managed support, or staffing decisions.</li>
+              <li>Offers a clean transition into implementation, managed IT expert coverage, or talent augmentation when appropriate.</li>
             </ul>
           </div>
         </section>
 
-        <ClosingCta eyebrow="Commercial next step" />
+        <ClosingCta eyebrow="Enterprise next step" />
       </main>
     </>
   )
