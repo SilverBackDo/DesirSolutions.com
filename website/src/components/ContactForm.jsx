@@ -46,7 +46,7 @@ export function ContactForm() {
   const [status, setStatus] = useState({ tone: 'idle', message: '' })
   const [submitting, setSubmitting] = useState(false)
 
-  const endpoint = import.meta.env.VITE_CONTACT_ENDPOINT || '/api/contact'
+  const endpoint = (import.meta.env.VITE_CONTACT_ENDPOINT || '/api/contact').trim()
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -98,6 +98,15 @@ export function ContactForm() {
 
     setSubmitting(true)
     setErrors({})
+    if (!endpoint) {
+      setStatus({
+        tone: 'error',
+        message: `The web intake endpoint is not configured yet. Email ${company.email} to continue immediately or set VITE_CONTACT_ENDPOINT to a live intake service.`,
+      })
+      setSubmitting(false)
+      return
+    }
+
     setStatus({ tone: 'idle', message: 'Submitting your request...' })
 
     try {

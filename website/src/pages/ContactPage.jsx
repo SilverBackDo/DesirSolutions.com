@@ -8,7 +8,7 @@ export function ContactPage() {
     <>
       <Seo
         title="Contact"
-        description="Request an infrastructure assessment or discuss an automation sprint or fractional leadership engagement."
+        description="Start a conversation about infrastructure transformation, AI automation, managed IT support, or enterprise staffing."
         path="/contact"
       />
 
@@ -17,16 +17,16 @@ export function ContactPage() {
           <div className="space-y-6">
             <SectionIntro
               eyebrow="Start the conversation"
-              title="Request the assessment or describe the delivery problem that needs attention."
-              copy="The fastest way to close the first engagement is a short call followed by the fixed-fee assessment. Use the form to outline the environment and the current bottleneck."
+              title="Connect with the solutions team for infrastructure, automation, managed IT, or staffing needs."
+              copy="Use the form to outline the environment, delivery challenge, operational pressure, or talent gap. The request will be routed into the right service lane for review."
             />
 
             <div className="panel p-6">
               <h2 className="font-display text-2xl font-semibold text-brand-950">What happens next</h2>
               <ul className="prose-list mt-4">
                 <li>Desir Solutions reviews the request within one business day.</li>
-                <li>If the fit is strong, the next step is a short discovery call.</li>
-                <li>The first commercial step is the assessment, not a vague discovery cycle.</li>
+                <li>If the fit is strong, the next step is a focused solutions conversation.</li>
+                <li>The request is aligned to assessment, project delivery, managed support, or staffing as appropriate.</li>
                 <li>The intake can route to the CRM API or fall back to direct email if needed.</li>
               </ul>
             </div>
