@@ -91,9 +91,10 @@ install_runtime_assets() {
 }
 
 main() {
+  requested_image_override="${DESIRSOLUTIONS_IMAGE:-}"
   load_env
 
-  DESIRSOLUTIONS_IMAGE="${DESIRSOLUTIONS_IMAGE:-$DEFAULT_DESIRSOLUTIONS_IMAGE}"
+  DESIRSOLUTIONS_IMAGE="${requested_image_override:-${DESIRSOLUTIONS_IMAGE:-$DEFAULT_DESIRSOLUTIONS_IMAGE}}"
 
   require_env \
     LETSENCRYPT_EMAIL \
