@@ -172,8 +172,12 @@ jobs:
             website_public_base_url="${WEBSITE_PUBLIC_BASE_URL:?WEBSITE_PUBLIC_BASE_URL is required}"
             website_public_host="${WEBSITE_PUBLIC_HOST:?WEBSITE_PUBLIC_HOST is required}"
             website_compose_file="${WEBSITE_COMPOSE_FILE:?WEBSITE_COMPOSE_FILE is required}"
+            current_user="$(id -un)"
+            current_group="$(id -gn)"
 
             sudo install -d -m 0755 "$(dirname "$deploy_root")"
+            sudo install -d -m 0755 "$deploy_root"
+            sudo chown -R "$current_user:$current_group" "$deploy_root"
             if [ ! -d "$deploy_root/.git" ]; then
               git clone https://github.com/SilverBackDo/DesirSolutions.com.git "$deploy_root"
             fi
@@ -195,9 +199,18 @@ jobs:
             "${compose_cmd[@]}" pull website
             "${compose_cmd[@]}" up -d website
 
-            curl --fail --show-error --silent \
-              -H "Host: ${website_public_host}" \
-              "${website_public_base_url%/}/" >/dev/null
+            for attempt in $(seq 1 20); do
+              if curl --fail --show-error --silent \
+                -H "Host: ${website_public_host}" \
+                "${website_public_base_url%/}/" >/dev/null; then
+                exit 0
+              fi
+              sleep 3
+            done
+
+            "${compose_cmd[@]}" ps website || true
+            "${compose_cmd[@]}" logs --tail=80 website || true
+            exit 1
           EOF
 
       - name: Publish deploy summary
