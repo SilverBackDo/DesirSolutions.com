@@ -187,9 +187,6 @@ jobs:
           echo "    cp /tmp/desirsolutions-website.tar /mnt/ct114/tmp/"
           echo "    umount /mnt/ct114"
           echo "    Then inside CT 114: podman load -i /tmp/desirsolutions-website.tar"
-          echo ""
-          echo "NOTE: OCI VM (170.9.21.103) is DECOMMISSIONED."
-          echo "All deployment targets now point to Proxmox CT 114."
 
       - name: Publish deploy summary
         if: steps.deploy_prereqs.outputs.ready == 'true'
@@ -227,28 +224,9 @@ jobs:
             echo "2. **SSH access to CT 114** — to use podman inside the container"
             echo "3. **A deploy mechanism** that works with devlion's privileges"
             echo
-            echo "### OCI artifacts removed"
+            echo "### Deploy target"
             echo
-            echo "- ✅ Deploy.yml no longer references OCI_VM_HOST, OCI_VM_USER, OCI_VM_SSH_KEY"
-            echo "- ✅ OCI VM (170.9.21.103) is decommissioned"
-            echo "- ✅ All deployment targets now point to Proxmox CT 114 (10.225.1.114)"
+            echo "- **Deploy target**: Proxmox CT 114 (10.225.1.114) — proxy-ds01"
+            echo "- **Method**: Image pushed to GHCR, deployed inside CT 114 via podman"
+            echo "- **Access path**: Root on hypervisor (pct exec/lxc-attach) or SSH to CT 114"
           } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Cleanup OCI artifacts
-        if: steps.deploy_prereqs.outputs.ready == 'true'
-        env:
-          OCI_VM_KEY: ${{ secrets.OCI_VM_SSH_KEY }}
-        run: |
-          set -euo pipefail
-          echo "## OCI Artifact Cleanup"
-          echo
-          if [ -n "$OCI_VM_KEY" ]; then
-            echo "- 🔴 OCI_VM_SSH_KEY secret still present in repository"
-            echo "  Action required: Remove OCI_VM_SSH_KEY from GitHub repository secrets"
-          else
-            echo "- ✅ OCI_VM_SSH_KEY secret not found (already removed)"
-          fi
-          echo
-          echo "- ✅ OCI VM (170.9.21.103) is decommissioned"
-          echo "- ✅ No OCI-related podman images or containers on this runner"
-          echo "- ✅ Deploy.yml references only Proxmox (CT 114) as deploy target"
