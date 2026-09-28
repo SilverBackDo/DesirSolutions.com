@@ -58,6 +58,13 @@ const privacySections = [
     ],
   },
   {
+    title: 'Email marketing & newsletter',
+    body: [
+      'If you subscribe to the Desir Solutions newsletter, we use your email address solely to send occasional company and industry updates.',
+      'You may unsubscribe at any time using the link included in any newsletter email, or by contacting the privacy email below.',
+    ],
+  },
+  {
     title: 'Retention',
     body: [
       'Inquiry data is retained as needed for business operations, security review, recordkeeping, and backup integrity, then deleted or archived according to internal retention practices.',

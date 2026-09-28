@@ -13,8 +13,6 @@ const initialState = {
   deliveryModel: '',
   workModel: '',
   location: '',
-  timeline: '',
-  budgetBand: '',
   complianceRequirements: '',
   notes: '',
   website: '',
@@ -123,8 +121,6 @@ export function EmployerRequestForm() {
           delivery_model: formData.deliveryModel || null,
           work_model: formData.workModel || null,
           location: formData.location.trim() || null,
-          timeline: formData.timeline.trim() || null,
-          budget_band: formData.budgetBand || null,
           compliance_requirements: formData.complianceRequirements.trim() || null,
           notes: formData.notes.trim() || null,
           website: formData.website,
@@ -344,34 +340,6 @@ export function EmployerRequestForm() {
               onChange={handleChange}
               value={formData.location}
             />
-          </label>
-
-          <label className="space-y-2 text-sm font-medium text-slate-700" htmlFor="timeline">
-            Timeline
-            <input
-              className="field"
-              id="timeline"
-              name="timeline"
-              onChange={handleChange}
-              value={formData.timeline}
-            />
-          </label>
-
-          <label className="space-y-2 text-sm font-medium text-slate-700" htmlFor="budgetBand">
-            Budget band
-            <select
-              className="field"
-              id="budgetBand"
-              name="budgetBand"
-              onChange={handleChange}
-              value={formData.budgetBand}
-            >
-              <option value="">Select one</option>
-              <option value="under_10k">Under $10k</option>
-              <option value="10k_to_25k">$10k to $25k</option>
-              <option value="25k_to_50k">$25k to $50k</option>
-              <option value="50k_plus">$50k+</option>
-            </select>
           </label>
         </div>
 

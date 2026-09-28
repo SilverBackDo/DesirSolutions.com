@@ -1,4 +1,5 @@
 import { ClosingCta } from '../components/ClosingCta'
+import { OpenRoles } from '../components/OpenRoles'
 import { SectionIntro } from '../components/SectionIntro'
 import { Seo } from '../components/Seo'
 import { candidateProcess, careerPrinciples } from '../data/siteContent'
@@ -18,6 +19,8 @@ export function CareersPage() {
           title="A candidate process built around fit, timing, and real delivery demand."
           copy="Desir Solutions is not a resume warehouse. The candidate lane exists to support real employer demand, enterprise delivery needs, and human-reviewed opportunity matching."
         />
+
+        <OpenRoles />
 
         <section className="mt-8 grid gap-5 lg:grid-cols-3">
           {candidateProcess.map((item) => (

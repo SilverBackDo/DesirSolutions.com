@@ -11,8 +11,6 @@ const initialState = {
   workAuthorization: '',
   yearsExperience: '',
   availabilityDate: '',
-  compensationExpectation: '',
-  compensationType: '',
   remotePreference: '',
   onsitePreference: '',
   relocationPreference: '',
@@ -165,10 +163,6 @@ export function CandidateProfileForm() {
           work_authorization: formData.workAuthorization.trim() || null,
           years_experience: formData.yearsExperience ? Number(formData.yearsExperience) : null,
           availability_date: formData.availabilityDate || null,
-          compensation_expectation: formData.compensationExpectation
-            ? Number(formData.compensationExpectation)
-            : null,
-          compensation_type: formData.compensationType || null,
           remote_preference: formData.remotePreference || null,
           onsite_preference: formData.onsitePreference || null,
           relocation_preference: formData.relocationPreference || null,
@@ -327,34 +321,6 @@ export function CandidateProfileForm() {
               type="date"
               value={formData.availabilityDate}
             />
-          </label>
-          <label className="space-y-2 text-sm font-medium text-slate-700" htmlFor="compensationExpectation">
-            Compensation expectation
-            <input
-              className="field"
-              id="compensationExpectation"
-              min="0"
-              name="compensationExpectation"
-              onChange={handleChange}
-              step="0.01"
-              type="number"
-              value={formData.compensationExpectation}
-            />
-          </label>
-          <label className="space-y-2 text-sm font-medium text-slate-700" htmlFor="compensationType">
-            Compensation type
-            <select
-              className="field"
-              id="compensationType"
-              name="compensationType"
-              onChange={handleChange}
-              value={formData.compensationType}
-            >
-              <option value="">Select one</option>
-              <option value="hourly">Hourly</option>
-              <option value="salary">Salary</option>
-              <option value="project">Project / fixed fee</option>
-            </select>
           </label>
           <label className="space-y-2 text-sm font-medium text-slate-700" htmlFor="remotePreference">
             Remote preference

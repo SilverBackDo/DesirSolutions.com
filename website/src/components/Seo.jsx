@@ -1,9 +1,10 @@
 import { Helmet } from 'react-helmet-async'
 import { company } from '../data/siteContent'
 
-export function Seo({ title, description, path = '/', noindex = false }) {
+export function Seo({ title, description, path = '/', noindex = false, jsonLd = null }) {
   const fullTitle = `${title} | ${company.name}`
   const canonical = `${company.websiteUrl}${path === '/' ? '' : path}`
+  const blocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : []
 
   return (
     <Helmet>
@@ -19,6 +20,9 @@ export function Seo({ title, description, path = '/', noindex = false }) {
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
+      {blocks.map((block, i) => (
+        <script key={i} type="application/ld+json">{JSON.stringify(block)}</script>
+      ))}
     </Helmet>
   )
 }

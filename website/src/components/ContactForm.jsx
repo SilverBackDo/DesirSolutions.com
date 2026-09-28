@@ -1,11 +1,20 @@
 import { useState } from 'react'
 import { company } from '../data/siteContent'
 
+// Canonical LoB order (owner ruling 2026-08-15): placement-first.
+const priorityOptions = [
+  { value: 'Contractor placement request', label: 'IT Contractor Placement' },
+  { value: 'Infrastructure assessment request', label: 'IT Infrastructure Solutions' },
+  { value: 'AI/LLM resilience inquiry', label: 'Local AI/LLM Resilience' },
+  { value: 'Newsletter interest', label: 'Newsletter' },
+]
+
 const initialState = {
   name: '',
   email: '',
   company: '',
   environmentSize: '',
+  priority: priorityOptions[0].value,
   problem: '',
   website: '',
 }
@@ -46,7 +55,7 @@ export function ContactForm() {
   const [status, setStatus] = useState({ tone: 'idle', message: '' })
   const [submitting, setSubmitting] = useState(false)
 
-  const endpoint = (import.meta.env.VITE_CONTACT_ENDPOINT || '/api/contact').trim()
+  const endpoint = (import.meta.env.VITE_CONTACT_ENDPOINT || 'https://desirsolutions.com/api/contact/').trim()
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -123,7 +132,7 @@ export function ContactForm() {
           environment: formData.environmentSize,
           infrastructure_scope: formData.environmentSize,
           message: formData.problem.trim(),
-          priority: 'Infrastructure assessment request',
+          priority: formData.priority,
           website: formData.website,
         }),
       })
@@ -248,6 +257,22 @@ export function ContactForm() {
               {errors.environmentSize}
             </span>
           ) : null}
+        </label>
+          <label className="space-y-2 text-sm font-medium text-slate-700" htmlFor="priority">
+          What's this about?
+          <select
+            className="field"
+            id="priority"
+            name="priority"
+            onChange={handleChange}
+            value={formData.priority}
+          >
+            {priorityOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </label>
         </div>
 

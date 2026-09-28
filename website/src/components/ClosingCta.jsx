@@ -1,6 +1,6 @@
 import { Button } from './Button'
 
-const focusAreas = ['Infrastructure', 'AI Automation', 'Managed IT', 'IT Staffing']
+const focusAreas = ['IT Staffing', 'Infrastructure', 'AI Automation', 'Managed IT']
 
 export function ClosingCta({
   eyebrow = 'Next step',

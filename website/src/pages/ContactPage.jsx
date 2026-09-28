@@ -8,7 +8,7 @@ export function ContactPage() {
     <>
       <Seo
         title="Contact"
-        description="Start a conversation about infrastructure transformation, AI automation, managed IT support, or enterprise staffing."
+        description="Start a conversation about infrastructure stability, automation, managed expert support, or focused IT talent coverage."
         path="/contact"
       />
 
@@ -17,8 +17,8 @@ export function ContactPage() {
           <div className="space-y-6">
             <SectionIntro
               eyebrow="Start the conversation"
-              title="Connect with the solutions team for infrastructure, automation, managed IT, or staffing needs."
-              copy="Use the form to outline the environment, delivery challenge, operational pressure, or talent gap. The request will be routed into the right service lane for review."
+              title="Start with the environment, the operational pressure, and the decision you need to make."
+              copy="Use the form to outline the infrastructure challenge, automation gap, delivery pressure, or talent need. The request will be routed into assessment, implementation, support, or staffing review as appropriate."
             />
 
             <div className="panel p-6">
@@ -26,7 +26,8 @@ export function ContactPage() {
               <ul className="prose-list mt-4">
                 <li>Desir Solutions reviews the request within one business day.</li>
                 <li>If the fit is strong, the next step is a focused solutions conversation.</li>
-                <li>The request is aligned to assessment, project delivery, managed support, or staffing as appropriate.</li>
+                <li>The request is aligned to the infrastructure assessment first when clarity is needed.</li>
+                <li>Project delivery, managed support, or staffing is recommended only when the need is defined.</li>
                 <li>The intake can route to the CRM API or fall back to direct email if needed.</li>
               </ul>
             </div>
