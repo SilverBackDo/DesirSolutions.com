@@ -4,6 +4,8 @@
 @theme {
   --font-sans: "Manrope", sans-serif;
   --font-display: "Space Grotesk", sans-serif;
+
+  /* Brand palette */
   --color-brand-950: #0c2033;
   --color-brand-900: #123c5a;
   --color-brand-700: #1f6f95;
@@ -14,6 +16,28 @@
   --color-accent-100: #ddf6ec;
   --color-sand-50: #f4f9fc;
   --color-sand-100: #e7f1f7;
+
+  /* Radius tokens (replaces arbitrary rounded-[32px] etc.) */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-panel: 32px;
+  --radius-card: 28px;
+
+  /* Typography scale tokens (replaces text-[11px] / tracking-[0.24em] arbitrary values) */
+  --text-eyebrow: 0.6875rem;       /* 11px */
+  --tracking-eyebrow: 0.24em;
+  --tracking-footer-label: 0.20em;
+
+  /* Shadow scale tokens */
+  --shadow-xs: 0 2px 8px rgba(12,32,51,0.06);
+  --shadow-sm: 0 8px 24px rgba(12,32,51,0.08);
+  --shadow-card: 0 16px 50px rgba(12,32,51,0.06);
+  --shadow-panel: 0 24px 80px rgba(12,32,51,0.08);
+  --shadow-dark-panel: 0 28px 90px rgba(12,32,51,0.22);
+  --shadow-interactive-hover: 0 30px 90px rgba(12,32,51,0.14);
 }
 
 @keyframes fadeUp {
@@ -209,7 +233,9 @@
   }
 
   .eyebrow {
-    @apply inline-flex items-center rounded-full border border-brand-900/10 bg-white/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-brand-900 shadow-sm;
+    @apply inline-flex items-center rounded-full border border-brand-900/10 bg-white/75 px-3 py-1 font-semibold uppercase text-brand-900 shadow-sm;
+    font-size: var(--text-eyebrow);
+    letter-spacing: var(--tracking-eyebrow);
   }
 
   .eyebrow-dark {

@@ -1,14 +1,14 @@
 import { ClosingCta } from '../components/ClosingCta'
 import { SectionIntro } from '../components/SectionIntro'
 import { Seo } from '../components/Seo'
-import { company, enterpriseProof, practiceAreas, teamModel } from '../data/siteContent'
+import { company, enterpriseProof, founderTrackRecord, practiceAreas, teamModel } from '../data/siteContent'
 
 export function AboutPage() {
   return (
     <>
       <Seo
         title="About"
-        description="Enterprise infrastructure, automation, managed IT, and staff placement solutions built around structured delivery workflows."
+        description="A founder-led infrastructure stability and automation consulting firm built around structured buyer proof and disciplined delivery workflows."
         path="/about"
       />
 
@@ -17,14 +17,13 @@ export function AboutPage() {
           <div className="space-y-5">
             <span className="eyebrow">Enterprise operating model</span>
             <h1 className="font-display text-5xl font-semibold tracking-tight text-brand-950 sm:text-6xl">
-              Desir Solutions is positioned as a full enterprise technology and staffing solutions
-              platform.
+              Desir Solutions is a founder-led infrastructure stability and automation consulting
+              firm.
             </h1>
             <p className="text-lg leading-8 text-slate-600">
-              The company is built around dedicated service towers for enterprise infrastructure,
-              AI automation, managed IT expert solutions, and IT staff placement. The public
-              posture is structured to give buyers and hiring managers a serious, organized, and
-              trustworthy path into the right engagement.
+              The company leads with a defined assessment offer for Linux, VMware, hybrid-cloud,
+              automation, and operational delivery pressure. Follow-on implementation, support, and
+              staffing lanes exist to serve a documented need, not to blur the public message.
             </p>
           </div>
 
@@ -35,23 +34,42 @@ export function AboutPage() {
             <div className="mt-4 space-y-4 text-sm leading-7 text-slate-600">
               <p>
                 {company.name} is based in {company.location} and serves enterprise buyers who need
-                stronger infrastructure execution, intelligent automation, operational support, and
-                specialized staffing coverage.
+                stronger infrastructure execution, automation discipline, operational support, and
+                specialized technical coverage.
               </p>
               <p>
                 The model is designed to support strategy, delivery, support continuity, and talent
-                placement in a way that feels premium, credible, and operationally mature.
+                placement through a proof-first path that feels credible and operationally mature.
               </p>
             </div>
           </div>
         </section>
 
+        <section className="py-10">
+          <SectionIntro
+            eyebrow="Founder track record"
+            title="Senior, hands-on infrastructure delivery behind the firm."
+            copy="Desir Solutions is founder-led by a senior infrastructure engineer with enterprise delivery experience across regulated and high-availability environments."
+          />
+          <div className="mt-8 grid gap-5 sm:grid-cols-2">
+            {founderTrackRecord.map((item) => (
+              <article key={item} className="panel p-6">
+                <p className="text-sm leading-7 text-slate-600">{item}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="py-14">
           <SectionIntro
-            eyebrow="Operating structure"
+            eyebrow="Operating functions"
             title="Organized like an enterprise solutions business, not a generic consulting page."
             copy="Each part of the public site maps to a real operating lane so enterprise visitors can understand how work, support, and staffing requests are handled."
           />
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-500">
+            These are operating functions within a founder-led practice, not separately staffed
+            departments — the same senior team coordinates work across them.
+          </p>
 
           <div className="mt-8 grid gap-5 lg:grid-cols-3">
             {teamModel.map((item) => (
