@@ -126,7 +126,11 @@ jobs:
           echo ""
 
           # SSH to hypervisor and run verification commands
-          ssh "$PROXMOX_USER@$PROXMOX_HOST" bash -s <<'VERIFY_EOF'
+          # Use explicit SSH key for the hypervisor
+          ssh -i "$HOME/.ssh/id_ed25519_devprox99p01" \
+              -o StrictHostKeyChecking=accept-new \
+              -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+              "$PROXMOX_USER@$PROXMOX_HOST" bash -s <<'VERIFY_EOF'
             set -euo pipefail
             echo "Running on hypervisor as: $(whoami) (uid=$(id -u))"
             echo ""
