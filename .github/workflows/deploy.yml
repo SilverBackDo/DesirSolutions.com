@@ -125,17 +125,15 @@ jobs:
           echo "───────────────────────────────────────────────────────────────"
           echo ""
 
-          # SSH to hypervisor and run verification commands
-          # Use explicit SSH key for the hypervisor
-          ssh -i "$HOME/.ssh/id_ed25519_devprox99p01" \
-              -o StrictHostKeyChecking=accept-new \
-              -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
-              "$PROXMOX_USER@$PROXMOX_HOST" bash -s <<'VERIFY_EOF'
+          # Write verification script to temp file, then SSH execute
+          # (avoids heredoc-in-YAML indentation issues)
+          VERIFY_SCRIPT="$HOME/.verify_proxmox.sh"
+          cat > "$VERIFY_SCRIPT" <<'INNEREOF'
             set -euo pipefail
             echo "Running on hypervisor as: $(whoami) (uid=$(id -u))"
             echo ""
             echo "── CT 114 (proxy-ds01) status ──"
-            echo "  Config: $(test -f /var/lib/lxc/114/config && cat /var/lib/lxc/114/config | grep -E 'lxc.idmap|lxc.rootfs.path|lxc.uts.name' || echo 'NOT FOUND')"
+            echo "  Config: $(test -f /var/lib/lxc/114/config && grep -E 'lxc.idmap|lxc.rootfs.path|lxc.uts.name' /var/lib/lxc/114/config || echo 'NOT FOUND')"
             echo "  Rootfs: $(ls -la /var/lib/lxc/114/rootfs 2>&1 | head -3)"
             echo "  Nginx:  $(ps aux 2>/dev/null | grep -E 'nginx.*master' | grep '100000' | head -1 || echo 'NOT FOUND')"
             echo "  Podman: $(ps aux 2>/dev/null | grep -E 'podman run' | grep '100000' | head -3 || echo 'NOT FOUND')"
@@ -185,7 +183,14 @@ jobs:
             echo ""
             echo "NOTE: OCI VM (170.9.21.103) is DECOMMISSIONED."
             echo "All deployment targets now point to Proxmox CT 114."
-          ' 2>&1 || true
+          INNEREOF
+          chmod +x "$VERIFY_SCRIPT"
+
+          # SSH to hypervisor and run the verification script
+          ssh -i "$HOME/.ssh/id_ed25519_devprox99p01" \
+              -o StrictHostKeyChecking=accept-new \
+              -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+              "$PROXMOX_USER@$PROXMOX_HOST" bash "$VERIFY_SCRIPT"
 
       - name: Publish deploy summary
         if: steps.deploy_prereqs.outputs.ready == 'true'
