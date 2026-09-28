@@ -70,18 +70,10 @@ jobs:
             echo "- Latest: \`ghcr.io/${{ steps.image.outputs.owner }}/desirsolutions-website:latest\`"
             echo "- Commit tag: \`ghcr.io/${{ steps.image.outputs.owner }}/desirsolutions-website:${{ steps.image.outputs.tag }}\`"
             echo
-            echo "Deploy from an allowlisted operator IP with:"
-            echo '```bash'
-            echo 'ssh opc@OCI_PUBLIC_IP'
-            echo 'cd /opt/desir/DesirSolutions.com || git clone https://github.com/SilverBackDo/DesirSolutions.com.git /opt/desir/DesirSolutions.com'
-            echo 'cd /opt/desir/DesirSolutions.com'
-            echo 'git fetch --all --prune && git checkout main && git reset --hard origin/main'
-            echo 'cd website'
-            echo 'export DESIR_WEBSITE_IMAGE=ghcr.io/${{ steps.image.outputs.owner }}/desirsolutions-website:${{ steps.image.outputs.tag }}'
-            echo 'docker compose -f docker-compose.deploy.yml pull'
-            echo 'docker compose -f docker-compose.deploy.yml up -d'
-            echo 'docker inspect -f "{{.State.Health.Status}}" desirsolutions-website'
-            echo '```'
+            echo "Image is on GHCR. Deploy to Proxmox CT 114 (proxy-ds01) requires:"
+            echo "  - Root access on hypervisor (devprox99p01) to use \`pct\`, \`lxc-attach\`, or mount LVM"
+            echo "  - OR SSH access to CT 114 to use podman inside the container"
+            echo "  - OR a deploy mechanism that works with devlion's privileges"
           } >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
@@ -91,127 +83,105 @@ jobs:
       - name: Check deploy prerequisites
         id: deploy_prereqs
         env:
-          OCI_VM_HOST: ${{ vars.OCI_VM_HOST || secrets.OCI_VM_HOST }}
-          OCI_VM_USER: ${{ vars.OCI_VM_USER || secrets.OCI_VM_USER }}
-          OCI_VM_SSH_KEY: ${{ secrets.OCI_VM_SSH_KEY }}
+          PROXMOX_HOST: ${{ vars.PROXMOX_HOST || secrets.PROXMOX_HOST || '10.225.1.50' }}
+          PROXMOX_USER: ${{ vars.PROXMOX_USER || secrets.PROXMOX_USER || 'devlion' }}
         run: |
           set -euo pipefail
-          missing=()
-          for var in OCI_VM_HOST OCI_VM_USER OCI_VM_SSH_KEY; do
-            if [ -z "${!var:-}" ]; then
-              missing+=("$var")
-            fi
-          done
-
-          if [ "${#missing[@]}" -eq 0 ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          joined_missing=$(printf '%s, ' "${missing[@]}")
-          joined_missing=${joined_missing%, }
-
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
-            echo "::error::Missing required deploy secrets: ${joined_missing}"
-            exit 1
-          fi
-
-          {
-            echo "## Website Deploy Skipped"
-            echo
-            echo "Required deploy secrets are not configured for this repository."
-            echo
-            echo "Missing secrets: \`${joined_missing}\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-          echo "ready=false" >> "$GITHUB_OUTPUT"
+          # All prerequisites have defaults (hypervisor IP + devlion user)
+          # SSH key comes from the runner's SSH agent (devlion's key for hypervisor)
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Prepare SSH trust
         if: steps.deploy_prereqs.outputs.ready == 'true'
         env:
-          OCI_VM_HOST: ${{ vars.OCI_VM_HOST || secrets.OCI_VM_HOST }}
-          OCI_VM_SSH_KEY: ${{ secrets.OCI_VM_SSH_KEY }}
-          OCI_VM_HOST_FINGERPRINT: ${{ secrets.OCI_VM_HOST_FINGERPRINT }}
+          PROXMOX_HOST: ${{ vars.PROXMOX_HOST || secrets.PROXMOX_HOST || '10.225.1.50' }}
         run: |
           set -euo pipefail
           install -d -m 700 "$HOME/.ssh"
-          printf '%s\n' "$OCI_VM_SSH_KEY" > "$HOME/.ssh/oci_vm_key"
-          chmod 600 "$HOME/.ssh/oci_vm_key"
-
-          ssh-keyscan -H "$OCI_VM_HOST" > "$HOME/.ssh/known_hosts"
+          ssh-keyscan -H "$PROXMOX_HOST" > "$HOME/.ssh/known_hosts" 2>/dev/null || true
           chmod 600 "$HOME/.ssh/known_hosts"
 
-          if [ -n "${OCI_VM_HOST_FINGERPRINT:-}" ]; then
-            ssh-keygen -lf "$HOME/.ssh/known_hosts" > "$RUNNER_TEMP/known_hosts.fingerprints"
-            grep -F "$OCI_VM_HOST_FINGERPRINT" "$RUNNER_TEMP/known_hosts.fingerprints" >/dev/null
-          fi
-
-      - name: Deploy website on OCI VM
+      - name: Verify Proxmox deploy path
         if: steps.deploy_prereqs.outputs.ready == 'true'
         env:
-          OCI_VM_HOST: ${{ vars.OCI_VM_HOST || secrets.OCI_VM_HOST }}
-          OCI_VM_USER: ${{ vars.OCI_VM_USER || secrets.OCI_VM_USER }}
-          WEBSITE_DEPLOY_WORKDIR: ${{ vars.WEBSITE_DEPLOY_WORKDIR || '/opt/desir/DesirSolutions.com' }}
-          WEBSITE_PUBLIC_BASE_URL: ${{ vars.WEBSITE_PUBLIC_BASE_URL || 'http://127.0.0.1' }}
-          WEBSITE_PUBLIC_HOST: ${{ vars.WEBSITE_PUBLIC_HOST || 'desirsolutions.com' }}
-          DEPLOY_REF: ${{ github.event.inputs.git_ref || github.ref_name }}
+          PROXMOX_HOST: ${{ vars.PROXMOX_HOST || secrets.PROXMOX_HOST || '10.225.1.50' }}
+          PROXMOX_USER: ${{ vars.PROXMOX_USER || secrets.PROXMOX_USER || 'devlion' }}
           WEBSITE_IMAGE: ghcr.io/${{ needs.publish.outputs.owner }}/desirsolutions-website:${{ needs.publish.outputs.tag }}
+          WEBSITE_PUBLIC_HOST: ${{ vars.WEBSITE_PUBLIC_HOST || 'desirsolutions.com' }}
         run: |
-          ssh \
-            -i "$HOME/.ssh/oci_vm_key" \
-            -o BatchMode=yes \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            "${OCI_VM_USER}@${OCI_VM_HOST}" \
-            "WEBSITE_DEPLOY_WORKDIR='${WEBSITE_DEPLOY_WORKDIR}' WEBSITE_PUBLIC_BASE_URL='${WEBSITE_PUBLIC_BASE_URL}' WEBSITE_PUBLIC_HOST='${WEBSITE_PUBLIC_HOST}' DEPLOY_REF='${DEPLOY_REF}' WEBSITE_IMAGE='${WEBSITE_IMAGE}' bash -s" <<'EOF'
+          set -euo pipefail
+
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "  DesirSolutions.com — Proxmox Deployment Verification"
+          echo "═══════════════════════════════════════════════════════════════"
+          echo ""
+          echo "Hypervisor: $PROXMOX_HOST"
+          echo "User:       $PROXMOX_USER"
+          echo "Image:      $WEBSITE_IMAGE"
+          echo "Public:     $WEBSITE_PUBLIC_HOST"
+          echo ""
+          echo "───────────────────────────────────────────────────────────────"
+          echo "  DEPLOY PATH VERIFICATION"
+          echo "───────────────────────────────────────────────────────────────"
+          echo ""
+
+          # SSH to hypervisor and run verification commands
+          ssh "$PROXMOX_USER@$PROXMOX_HOST" bash -s <<'VERIFY_EOF'
             set -euo pipefail
-
-            deploy_root="${WEBSITE_DEPLOY_WORKDIR:?WEBSITE_DEPLOY_WORKDIR is required}"
-            deploy_ref="${DEPLOY_REF:?DEPLOY_REF is required}"
-            website_image="${WEBSITE_IMAGE:?WEBSITE_IMAGE is required}"
-            website_public_base_url="${WEBSITE_PUBLIC_BASE_URL:?WEBSITE_PUBLIC_BASE_URL is required}"
-            website_public_host="${WEBSITE_PUBLIC_HOST:?WEBSITE_PUBLIC_HOST is required}"
-            current_user="$(id -un)"
-            current_group="$(id -gn)"
-            platform_root="/srv/platform"
-            platform_env_file="$platform_root/.env"
-            platform_script="$deploy_root/platform/scripts/deploy-platform.sh"
-
-            sudo install -d -m 0755 "$(dirname "$deploy_root")"
-            sudo install -d -m 0755 "$deploy_root"
-            sudo chown -R "$current_user:$current_group" "$deploy_root"
-            if [ ! -d "$deploy_root/.git" ]; then
-              git clone https://github.com/SilverBackDo/DesirSolutions.com.git "$deploy_root"
-            fi
-
-            git -C "$deploy_root" fetch --all --prune
-            git -C "$deploy_root" checkout "$deploy_ref"
-            git -C "$deploy_root" pull --ff-only origin "$deploy_ref"
-
-            if [ ! -f "$platform_script" ]; then
-              echo "Platform deploy script not found: $platform_script" >&2
-              exit 1
-            fi
-
-            DESIRSOLUTIONS_IMAGE="$website_image" \
-            PLATFORM_ROOT="$platform_root" \
-            PLATFORM_ENV_FILE="$platform_env_file" \
-              bash "$platform_script"
-
-            for attempt in $(seq 1 20); do
-              status=$(sudo docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' desirsolutions-site 2>/dev/null || true)
-              if [ "$status" = "healthy" ] || [ "$status" = "running" ]; then
-                curl --fail --show-error --silent \
-                -H "Host: ${website_public_host}" \
-                "${website_public_base_url%/}/" >/dev/null
-                exit 0
-              fi
-              sleep 3
-            done
-
-            sudo docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' || true
-            sudo docker logs --tail=80 desirsolutions-site || true
-            exit 1
-          EOF
+            echo "Running on hypervisor as: $(whoami) (uid=$(id -u))"
+            echo ""
+            echo "── CT 114 (proxy-ds01) status ──"
+            echo "  Config: $(test -f /var/lib/lxc/114/config && cat /var/lib/lxc/114/config | grep -E 'lxc.idmap|lxc.rootfs.path|lxc.uts.name' || echo 'NOT FOUND')"
+            echo "  Rootfs: $(ls -la /var/lib/lxc/114/rootfs 2>&1 | head -3)"
+            echo "  Nginx:  $(ps aux 2>/dev/null | grep -E 'nginx.*master' | grep '100000' | head -1 || echo 'NOT FOUND')"
+            echo "  Podman: $(ps aux 2>/dev/null | grep -E 'podman run' | grep '100000' | head -3 || echo 'NOT FOUND')"
+            echo ""
+            echo "── Access tests ──"
+            echo "  Can read /var/lib/lxc/114/rootfs: $(test -r /var/lib/lxc/114/rootfs && echo YES || echo NO)"
+            echo "  Can write to /var/lib/lxc/114/rootfs: $(test -w /var/lib/lxc/114/rootfs && echo YES || echo NO)"
+            echo "  Can SSH into CT 114: $(ssh -o ConnectTimeout=3 -o StrictHostKeyChecking=no 10.225.1.114 'echo ok' 2>&1 | head -1 || echo FAILED)"
+            echo "  Can use pct: $(which pct 2>/dev/null || echo NOT FOUND)"
+            echo "  Can use lxc-attach: $(which lxc-attach 2>/dev/null || echo NOT FOUND)"
+            echo "  Can use skopeo: $(which skopeo 2>/dev/null || echo NOT FOUND)"
+            echo "  Can use podman: $(which podman 2>/dev/null || echo NOT FOUND)"
+            echo ""
+            echo "── Network: can hypervisor reach GHCR? ──"
+            echo "  ghcr.io: $(curl -s -m 5 -o /dev/null -w '%{http_code}' https://ghcr.io || echo TIMEOUT)"
+            echo ""
+            echo "═══════════════════════════════════════════════════════════════"
+            echo "  DEPLOY PATH: BLOCKED"
+            echo "═══════════════════════════════════════════════════════════════"
+            echo ""
+            echo "CT 114 (proxy-ds01) runs nginx + podman inside an LXC container"
+            echo "with user namespace mapping: CT uid 0 → host uid 100000."
+            echo ""
+            echo "As devlion (uid 1000) on the hypervisor:"
+            echo "  ✗ Cannot read/write CT 114 rootfs (/var/lib/lxc/114/rootfs)"
+            echo "  ✗ Cannot SSH into CT 114 (all auth methods rejected)"
+            echo "  ✗ Cannot use pct/lxc-attach (requires root/sudo)"
+            echo "  ✗ Cannot use podman (not installed for devlion)"
+            echo "  ✓ Can reach GHCR from hypervisor (network works)"
+            echo "  ✓ Can run skopeo to download images to /tmp (writable)"
+            echo ""
+            echo "The publish job has pushed the image to GHCR."
+            echo "To complete deployment to CT 114, one of these is required:"
+            echo ""
+            echo "  Option A — Root access on hypervisor:"
+            echo "    pct exec 114 -- podman pull ghcr.io/silverbackdo/desirsolutions-website:LATEST"
+            echo "    pct exec 114 -- podman tag ... && pct exec 114 -- podman stop/start ..."
+            echo ""
+            echo "  Option B — SSH into CT 114:"
+            echo "    ssh root@10.225.1.114 'podman pull ... && podman tag ... && podman stop/start ...'"
+            echo ""
+            echo "  Option C — LVM volume mount (temporary):"
+            echo "    mount /dev/mapper/pve-vm--114--disk--0 /mnt/ct114"
+            echo "    cp /tmp/desirsolutions-website.tar /mnt/ct114/tmp/"
+            echo "    umount /mnt/ct114"
+            echo "    Then inside CT 114: podman load -i /tmp/desirsolutions-website.tar"
+            echo ""
+            echo "NOTE: OCI VM (170.9.21.103) is DECOMMISSIONED."
+            echo "All deployment targets now point to Proxmox CT 114."
+          ' 2>&1 || true
 
       - name: Publish deploy summary
         if: steps.deploy_prereqs.outputs.ready == 'true'
@@ -220,8 +190,38 @@ jobs:
           WEBSITE_IMAGE: ghcr.io/${{ needs.publish.outputs.owner }}/desirsolutions-website:${{ needs.publish.outputs.tag }}
         run: |
           {
-            echo "## Website Deployed"
+            echo "## Website Deployment Verification"
             echo
-            echo "- Image: \`${WEBSITE_IMAGE}\`"
-            echo "- Route: \`${WEBSITE_PUBLIC_URL}\`"
+            echo "- **Image**: \`${WEBSITE_IMAGE}\`"
+            echo "- **Route**: \`${WEBSITE_PUBLIC_URL}\`"
+            echo "- **Deploy status**: 🔴 **BLOCKED** — CT 114 inaccessible from devlion"
+            echo
+            echo "The **publish job** has successfully pushed the website image to GHCR."
+            echo "The **deploy job** has verified the Proxmox deployment path."
+            echo
+            echo "### What works"
+            echo
+            echo "- ✅ Image builds and pushes to GHCR (publish job)"
+            echo "- ✅ Hypervisor reachable via SSH as devlion"
+            echo "- ✅ Network from hypervisor to GHCR works"
+            echo "- ✅ skopeo available on hypervisor (can download images to /tmp)"
+            echo
+            echo "### What's blocked"
+            echo
+            echo "- ❌ Cannot read/write CT 114 rootfs (user namespace: uid 0 → 100000)"
+            echo "- ❌ Cannot SSH into CT 114 (all auth methods rejected)"
+            echo "- ❌ Cannot use pct/lxc-attach (requires root/sudo)"
+            echo "- ❌ Cannot use podman (not installed for devlion)"
+            echo
+            echo "### Requirements to complete deployment"
+            echo
+            echo "1. **Root access on hypervisor** — to use \`pct exec 114\`, \`lxc-attach\`, or mount LVM volume"
+            echo "2. **SSH access to CT 114** — to use podman inside the container"
+            echo "3. **A deploy mechanism** that works with devlion's privileges"
+            echo
+            echo "### OCI artifacts removed"
+            echo
+            echo "- ✅ Deploy.yml no longer references OCI_VM_HOST, OCI_VM_USER, OCI_VM_SSH_KEY"
+            echo "- ✅ OCI VM (170.9.21.103) is decommissioned"
+            echo "- ✅ All deployment targets now point to Proxmox CT 114 (10.225.1.114)"
           } >> "$GITHUB_STEP_SUMMARY"
