@@ -11,7 +11,7 @@ The current platform includes:
 - public marketing website and contact intake
 - CRM backend and operator UI
 - supervised AI workflows for lead qualification and proposal drafting
-- OCI-hosted deployment with Docker Compose
+- Proxmox-hosted deployment (LXC container) with Docker Compose, fronted by Cloudflare
 
 ## Security Principles
 
@@ -39,7 +39,7 @@ Current control model:
 
 ## Infrastructure and Hosting
 
-- primary deployment model: Oracle Cloud Infrastructure virtual machine
+- primary deployment model: self-hosted Proxmox LXC container (`proxy-ds01`, CT 114) behind Cloudflare
 - application runtime: Docker Compose
 - reverse proxy: nginx
 - database: PostgreSQL

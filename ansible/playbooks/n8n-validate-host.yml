@@ -3,12 +3,12 @@
   hosts: n8n_hosts
   gather_facts: true
   tasks:
-    - name: Ensure host is Oracle Linux or compatible
+    - name: Ensure host is a supported Linux distribution
       ansible.builtin.assert:
         that:
           - ansible_system == "Linux"
-          - ansible_distribution in ["OracleLinux", "Rocky", "AlmaLinux", "CentOS", "RedHat"]
-        fail_msg: "Target host must be Oracle Linux or a compatible RHEL-family host."
+          - ansible_distribution in ["Debian", "Ubuntu", "OracleLinux", "Rocky", "AlmaLinux", "CentOS", "RedHat"]
+        fail_msg: "Target host must be Debian/Ubuntu or a RHEL-family host."
 
     - name: Ensure Docker CLI is installed
       ansible.builtin.command: docker --version

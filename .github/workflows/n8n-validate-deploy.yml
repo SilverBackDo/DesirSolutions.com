@@ -73,15 +73,6 @@ jobs:
           bash -n scripts/n8n-healthcheck.sh
           bash -n scripts/smoke-crm-automation.sh
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Validate existing Terraform prod environment
-        working-directory: infrastructure/terraform/environments/prod
-        run: |
-          terraform init -backend=false
-          terraform validate
-
   deploy:
     if: github.event_name == 'workflow_dispatch'
     needs: validate

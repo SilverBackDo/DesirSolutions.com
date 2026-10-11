@@ -8,7 +8,6 @@ Infrastructure and deployment are managed from the Desirtech root.
 - `../docker-compose.yml`
 - `../.github/workflows/deploy.yml`
 - `../nginx/default.conf`
-
 - `../scripts/backup-db.sh`
 
 ## App Code Kept Here

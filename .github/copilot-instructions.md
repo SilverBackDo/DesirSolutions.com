@@ -43,5 +43,5 @@
 - Prefer minimal edits that preserve existing container names, service names, and route prefixes.
 - If changing API routes/schemas, update both FastAPI router definitions and any HTML/React callers.
 - When editing Nginx, preserve security headers, rate-limits, and ACME challenge path.
-- Do not introduce new infra tools (k8s/terraform/etc.) unless explicitly requested; current ops model is Docker Compose + a host bootstrap script.
+- Do not introduce new infra tools (k8s/terraform/etc.) unless explicitly requested; current ops model is Docker Compose on a Proxmox LXC host, fronted by Cloudflare.
 - For deploy-related updates, verify consistency across: `docker-compose.yml`, `nginx/default.conf`, `.env.example`, and `DEPLOYMENT-GUIDE.md`.

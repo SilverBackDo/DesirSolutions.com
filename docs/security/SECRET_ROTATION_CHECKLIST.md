@@ -13,7 +13,7 @@ Rotate these before production go-live and after any exposure event.
 - `PGADMIN_DEFAULT_PASSWORD`
 - `OPENAI_API_KEY`
 - `ANTHROPIC_API_KEY`
-- GitHub Actions secret `OCI_VM_SSH_KEY`
+- GitHub Actions deploy SSH key secret for the production host
 
 ## Rotation Steps
 

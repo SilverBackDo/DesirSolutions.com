@@ -1,6 +1,6 @@
 # Desir Solutions
 
-Public repository for the Desir Solutions marketing site, trust materials, and OCI deployment assets.
+Public repository for the Desir Solutions marketing site, trust materials, and deployment assets.
 
 Desir Solutions LLC is a Washington-based, founder-led consulting business focused on:
 
@@ -17,17 +17,15 @@ Use these paths for the active launch system:
 
 - `website/` - React + Vite production site
 - `website/nginx/` - container runtime and TLS configs
-- `infrastructure/terraform/` - OCI VM deployment stack
-- `ansible/`, `n8n/`, and `docs/n8n/` - n8n automation pack for the existing Docker + Traefik platform
+- `ansible/`, `n8n/`, and `docs/n8n/` - n8n automation pack for the Docker + Traefik platform
 - `n8n/workflows/` - CRM-linked workflow imports for lead qualification dispatch and sales digests
 - `docs/` - architecture, security, operations, contract-summary, and archived reference docs
-- `.github/workflows/validate.yml` - website and Terraform validation
-- `.github/workflows/deploy.yml` - website deployment workflow
+- `.github/workflows/validate.yml` - website validation
+- `.github/workflows/deploy.yml` - website image publish and deploy workflow
 
 ## Repository posture
 
 - `website/` is the day-one public site
-- `infrastructure/terraform/` is the day-one OCI host path
 - root-level static HTML and older platform assets are legacy material and are not the primary launch deployment source
 - internal business operations, finance, contracts, and sales records belong in the private business repository
 
@@ -50,11 +48,10 @@ docker compose config
 
 ## Deployment model
 
-- OCI Ampere A1 VM
-- Docker-based website runtime
-- NGINX serving the built React app
-- SSH restricted to approved admin CIDRs only
-- HTTPS cutover handled after DNS and certificate issuance
+- Proxmox LXC container (`proxy-ds01`, CT 114) runs the site
+- website image published to GHCR by GitHub Actions and pulled on the host
+- NGINX serves the built React app
+- Cloudflare fronts the public domain for TLS and edge delivery
 
 ## Contact intake
 

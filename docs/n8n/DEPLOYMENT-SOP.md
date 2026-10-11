@@ -1,8 +1,13 @@
 # n8n Deployment SOP
 
+> **Note:** The original Oracle Cloud (OCI) VM (`REDACTED-RETIRED-OCI-HOST`) is
+> decommissioned. n8n now runs on the Proxmox estate. Host-specific OCI
+> references below are historical; retarget to the current managed host before
+> running any playbook. The OCI Terraform stack has been removed from this repo.
+
 ## Deployment Recommendation
 
-Deploy `n8n` as a dedicated Docker Compose stack on the existing OCI VM, using:
+Deploy `n8n` as a dedicated Docker Compose stack on the managed host, using:
 
 - official `n8n` container
 - PostgreSQL on the same host
@@ -10,13 +15,12 @@ Deploy `n8n` as a dedicated Docker Compose stack on the existing OCI VM, using:
 - Ansible for host prep, templating, deployment, and service management
 - Terraform only for optional host-level infrastructure changes, not application configuration
 
-This keeps the live OCI investment intact and avoids a second platform pattern.
+This keeps the managed-host investment intact and avoids a second platform pattern.
 
 ## Repository Structure
 
 ```text
 Desirtech/
-├── infrastructure/terraform/          # existing OCI resource management; only optional n8n infra changes belong here
 ├── ansible/                           # new host prep and n8n deployment automation
 │   ├── inventory/
 │   ├── group_vars/
@@ -39,7 +43,7 @@ Desirtech/
 
 Keep Terraform responsible for:
 
-- OCI VM, subnet, routing, NSGs
+- host networking, subnet, routing, firewall rules
 - optional block volume attachment if n8n data outgrows boot volume
 - optional DNS records if DNS is eventually managed as code
 
@@ -72,7 +76,7 @@ Use Ansible for:
 - PostgreSQL container in the n8n stack
 - Let’s Encrypt handled by existing Traefik ACME flow
 - `community.docker` Ansible collection
-- OCI Terraform provider only if changing infrastructure state
+- infrastructure-as-code tooling only if changing host-level infrastructure state
 
 ## Existing VM Validation Steps
 
@@ -91,18 +95,18 @@ Expected state:
 - compose plugin is installed
 - `platform_edge` exists
 - Traefik is already serving `80/443`
-- SSH remains restricted to the approved CIDR or OCI Bastion
+- SSH remains restricted to the approved CIDR or a bastion/jump host
 
 Current wired production target:
 
-- host: `REDACTED-RETIRED-OCI-HOST`
-- ansible user: `opc`
-- key file: `REDACTED-RETIRED-OCI-KEY`
+- host: `<current managed host>` (the OCI host `REDACTED-RETIRED-OCI-HOST` is retired)
+- ansible user: `<ansible service user>`
+- key file: `<operator SSH key>`
 - planned n8n FQDN: `n8n.desirsolutions.com`
 
 ## Control Node Reality
 
-This repo now has the correct Ansible inventory and playbooks for the live OCI target, but on this current Windows workstation the native Ansible CLI fails with `WinError 87`.
+This repo carries the Ansible inventory and playbooks for the managed n8n target. On a Windows workstation the native Ansible CLI fails with `WinError 87`.
 
 Use one of these control paths:
 
@@ -112,7 +116,7 @@ Use one of these control paths:
 
 ## Step-By-Step Implementation Order
 
-1. Validate the existing OCI VM.
+1. Validate the managed host.
 2. Confirm Docker, compose, and the `platform_edge` network exist.
 3. Template the n8n env file with secrets.
 4. Prepare PostgreSQL and n8n data directories.
@@ -209,8 +213,8 @@ ansible-galaxy collection install -r ansible/requirements.yml
 cp ansible/group_vars/n8n_hosts/secrets.production.example.yml ansible/group_vars/n8n_hosts/secrets.yml
 ansible-playbook ansible/playbooks/n8n-validate-host.yml -e @ansible/group_vars/n8n_hosts/production.instance.yml -e @ansible/group_vars/n8n_hosts/secrets.yml
 ansible-playbook ansible/playbooks/n8n-deploy.yml -e @ansible/group_vars/n8n_hosts/production.instance.yml -e @ansible/group_vars/n8n_hosts/secrets.yml
-ssh -i REDACTED-RETIRED-OCI-KEY opc@REDACTED-RETIRED-OCI-HOST sudo /opt/desir/n8n-stack/healthcheck-n8n.sh
-ssh -i REDACTED-RETIRED-OCI-KEY opc@REDACTED-RETIRED-OCI-HOST sudo /opt/desir/n8n-stack/backup-n8n.sh
+ssh <ansible-user>@<managed-host> sudo /opt/desir/n8n-stack/healthcheck-n8n.sh
+ssh <ansible-user>@<managed-host> sudo /opt/desir/n8n-stack/backup-n8n.sh
 ```
 
 After the stack is up:
@@ -225,7 +229,7 @@ After the stack is up:
 
 ## Day 30 Hardening Plan
 
-1. Move n8n data from boot volume to a dedicated OCI block volume if usage grows.
+1. Move n8n data from the boot volume to a dedicated block/data volume if usage grows.
 2. Add SMTP and verify password reset flow if it was skipped during the first launch.
 3. Add off-host backup sync.
 4. Add self-hosted runner or operator-controlled deploy lane for GitHub Actions.

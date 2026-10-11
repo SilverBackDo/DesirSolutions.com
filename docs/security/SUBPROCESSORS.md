@@ -8,7 +8,8 @@ It should be reviewed whenever hosting, deployment, communications, or AI-provid
 
 | Vendor | Purpose | Data Categories | Notes |
 | --- | --- | --- | --- |
-| Oracle Cloud Infrastructure | Virtual machine hosting, storage, and networking | Application data, CRM data, operational logs, backups | Primary hosting platform in current deployment model |
+| Self-hosted Proxmox estate | Container/VM hosting, storage, and networking | Application data, CRM data, operational logs, backups | Primary hosting platform in current deployment model |
+| Cloudflare | DNS, TLS termination, and edge delivery for the public website | Public HTTP request metadata | Edge/CDN and TLS for `desirsolutions.com` |
 | GitHub | Source control and deployment workflow execution | Source code, deployment metadata, secrets metadata | Used for repository management and Actions-based deploy flow |
 | OpenAI | AI workflow execution when enabled | Prompt inputs, structured workflow context, model outputs | Used for lead qualification and proposal drafting when configured |
 | Anthropic | AI workflow execution when enabled | Prompt inputs, structured workflow context, model outputs | Secondary or alternate AI provider when configured |

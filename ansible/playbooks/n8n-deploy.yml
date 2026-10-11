@@ -1,5 +1,5 @@
 ---
-- name: Deploy n8n stack on existing OCI VM
+- name: Deploy n8n stack on the managed host
   hosts: n8n_hosts
   gather_facts: true
   roles:

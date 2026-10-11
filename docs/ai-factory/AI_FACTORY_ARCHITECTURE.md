@@ -149,7 +149,7 @@ Business effect in phase 1:
 
 ### Current
 
-- OCI VM
+- Proxmox LXC host
 - Docker Compose
 - nginx + FastAPI + PostgreSQL
 - GitHub Actions deploy over SSH

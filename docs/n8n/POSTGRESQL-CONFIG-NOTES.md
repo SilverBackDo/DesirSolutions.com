@@ -2,11 +2,11 @@
 
 ## Day 1 Decision
 
-PostgreSQL runs as a container inside the dedicated n8n stack on the same OCI VM.
+PostgreSQL runs as a container inside the dedicated n8n stack on the same managed host.
 
 This is the simplest production-safe starting point because:
 
-- the OCI VM already exists
+- the managed host already exists
 - the traffic volume is unknown
 - n8n needs a stable relational backend immediately
 - it keeps backup and restore local and straightforward

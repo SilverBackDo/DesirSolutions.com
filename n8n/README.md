@@ -4,7 +4,7 @@ This directory contains the source-of-truth n8n deployment assets and the first 
 
 ## What Lives Here
 
-- `docker-compose.yml` - dedicated n8n + PostgreSQL stack for the existing OCI VM
+- `docker-compose.yml` - dedicated n8n + PostgreSQL stack for the managed host
 - `.env.example` - runtime env template rendered into the live n8n stack
 - `systemd/` - host startup unit template reference
 - `workflows/` - importable workflow assets for CRM orchestration and sales operations
